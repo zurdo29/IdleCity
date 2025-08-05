@@ -4,9 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="IdleCity - A browser-based idle game where you build and manage your own city">
+    <meta name="keywords" content="idle game, city builder, incremental game, browser game">
+    <meta name="author" content="IdleCity Development Team">
+    <meta name="theme-color" content="#3b82f6">
     <title>IdleCity - Idle Game</title>
     
-    <!-- Tailwind CSS CDN -->
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏙️</text></svg>" type="image/svg+xml">
+    
+    <!-- Tailwind CSS CDN (Development) -->
+    <!-- Note: For production, consider using Tailwind CLI or PostCSS plugin -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Custom Tailwind Configuration -->
@@ -32,28 +39,28 @@
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen font-sans">
     <!-- Game Header -->
-    <header class="bg-white shadow-lg border-b-4 border-game-primary">
+    <header class="bg-white shadow-lg border-b-4 border-game-primary" role="banner">
         <div class="container mx-auto px-4 py-6">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="text-center md:text-left mb-4 md:mb-0">
-                    <h1 class="text-4xl md:text-5xl font-bold text-game-dark">
+                    <h1 class="text-4xl md:text-5xl font-bold text-game-dark" id="game-title">
                         🏙️ IdleCity
                     </h1>
-                    <p class="text-gray-600 mt-2">Build your dream city, one click at a time</p>
+                    <p class="text-gray-600 mt-2" id="game-subtitle">Build your dream city, one click at a time</p>
                 </div>
                 
                 <!-- Game Controls -->
-                <div class="flex flex-wrap gap-2">
-                    <button id="saveBtn" class="bg-game-secondary hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2">
+                <nav class="flex flex-wrap gap-2" role="navigation" aria-label="Game controls">
+                    <button id="saveBtn" class="bg-game-secondary hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2" aria-label="Save current game progress">
                         💾 Save Game
                     </button>
-                    <button id="loadBtn" class="bg-game-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2">
+                    <button id="loadBtn" class="bg-game-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2" aria-label="Load saved game progress">
                         📁 Load Game
                     </button>
-                    <button id="resetBtn" class="bg-game-danger hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2">
+                    <button id="resetBtn" class="bg-game-danger hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2" aria-label="Reset game to beginning (requires confirmation)">
                         🔄 Reset
                     </button>
-                </div>
+                </nav>
             </div>
         </div>
     </header>
@@ -92,7 +99,7 @@
                         
                         <!-- Population -->
                         <div class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border-2 border-green-200">
-                            <div class="flex justify-between items-center">
+                            <div class="flex justify-between items-center mb-2">
                                 <div class="flex items-center gap-3">
                                     <span class="text-2xl">👥</span>
                                     <div>
@@ -107,11 +114,17 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="progress-bar">
+                                <div id="populationProgress" class="progress-bar-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">
+                                <span id="populationCapacity">0 / 10,000</span>
+                            </div>
                         </div>
                         
                         <!-- Happiness -->
                         <div class="bg-gradient-to-r from-pink-50 to-pink-100 p-4 rounded-lg border-2 border-pink-200">
-                            <div class="flex justify-between items-center">
+                            <div class="flex justify-between items-center mb-2">
                                 <div class="flex items-center gap-3">
                                     <span class="text-2xl">😊</span>
                                     <div>
@@ -126,175 +139,237 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="progress-bar">
+                                <div id="happinessProgress" class="progress-bar-fill" style="width: 100%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Research -->
+                        <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border-2 border-purple-200">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">🔬</span>
+                                    <div>
+                                        <h3 class="font-semibold text-game-dark">Research</h3>
+                                        <p class="text-sm text-gray-600">Science points</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div id="researchCount" class="text-2xl font-bold text-purple-600 resource-counter">0</div>
+                                    <div class="text-sm text-gray-600">
+                                        +<span id="researchPerSecond">0</span>/sec
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
                     <!-- Manual Actions -->
                     <div class="mt-6 space-y-3">
                         <h3 class="font-semibold text-game-dark mb-3">Manual Actions</h3>
-                        <button id="clickCoinsBtn" class="w-full bg-game-accent hover:bg-yellow-600 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95">
+                        <button id="clickCoinsBtn" class="btn-enhanced w-full bg-game-accent hover:bg-yellow-600 text-white py-3 px-4 rounded-lg font-semibold" title="Keyboard shortcut: SPACE or C">
                             🪙 Collect Coins (+1)
                         </button>
-                        <button id="clickPopulationBtn" class="w-full bg-game-secondary hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95">
+                        <button id="clickPopulationBtn" class="btn-enhanced w-full bg-game-secondary hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold" title="Keyboard shortcut: P">
                             👥 Attract Citizens (+1)
                         </button>
                     </div>
                 </div>
             </section>
             
-            <!-- Buildings Panel -->
+            <!-- Buildings & Upgrades Panel -->
             <section class="lg:col-span-2">
-                <div class="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200">
-                    <h2 class="text-2xl font-bold text-game-dark mb-6 flex items-center gap-2">
-                        🏗️ Buildings
-                    </h2>
+                <!-- Tab Navigation -->
+                <div class="bg-white rounded-t-xl shadow-lg border-2 border-b-0 border-gray-200">
+                    <div class="flex">
+                        <button id="buildingsTab" class="tab-button active flex-1 py-3 px-4 text-center font-semibold border-r border-gray-200 rounded-tl-xl bg-game-primary text-white text-sm">
+                            🏗️ Buildings
+                        </button>
+                        <button id="upgradesTab" class="tab-button flex-1 py-3 px-4 text-center font-semibold border-r border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm">
+                            ⚡ Upgrades
+                        </button>
+                        <button id="achievementsTab" class="tab-button flex-1 py-3 px-4 text-center font-semibold rounded-tr-xl bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm">
+                            🏆 Progress
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Buildings Tab Content -->
+                <div id="buildingsContent" class="tab-content bg-white rounded-b-xl shadow-lg p-6 border-2 border-t-0 border-gray-200">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-game-dark mb-2 flex items-center gap-2">
+                            🏗️ City Buildings
+                        </h2>
+                        <p class="text-gray-600">Build and upgrade your city infrastructure</p>
+                    </div>
                     
-                    <!-- Buildings Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Building Tier Filters -->
+                    <div class="flex gap-2 mb-6 flex-wrap">
+                        <button class="tier-filter active px-4 py-2 rounded-lg bg-game-primary text-white text-sm font-medium" data-tier="all">
+                            All Buildings
+                        </button>
+                        <button class="tier-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-tier="1">
+                            Tier 1
+                        </button>
+                        <button class="tier-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-tier="2">
+                            Tier 2
+                        </button>
+                        <button class="tier-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-tier="3">
+                            Tier 3
+                        </button>
+                    </div>
+                    
+                    <!-- Dynamic Buildings Grid -->
+                    <div id="buildingsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Buildings will be dynamically generated here -->
+                    </div>
+                </div>
+                
+                <!-- Upgrades Tab Content -->
+                <div id="upgradesContent" class="tab-content hidden bg-white rounded-b-xl shadow-lg p-6 border-2 border-t-0 border-gray-200">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-game-dark mb-2 flex items-center gap-2">
+                            ⚡ Research & Upgrades
+                        </h2>
+                        <p class="text-gray-600">Spend research points to improve your city</p>
+                    </div>
+                    
+                    <!-- Upgrade Categories -->
+                    <div class="flex gap-2 mb-6 flex-wrap">
+                        <button class="upgrade-filter active px-4 py-2 rounded-lg bg-game-primary text-white text-sm font-medium" data-category="all">
+                            All Upgrades
+                        </button>
+                        <button class="upgrade-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="efficiency">
+                            Efficiency
+                        </button>
+                        <button class="upgrade-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="special">
+                            Special
+                        </button>
+                        <button class="upgrade-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="automation">
+                            Automation
+                        </button>
+                    </div>
+                    
+                    <!-- Dynamic Upgrades Grid -->
+                    <div id="upgradesGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Upgrades will be dynamically generated here -->
+                    </div>
+                </div>
+                
+                <!-- Achievements Tab Content -->
+                <div id="achievementsContent" class="tab-content hidden bg-white rounded-b-xl shadow-lg p-6 border-2 border-t-0 border-gray-200">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-game-dark mb-2 flex items-center gap-2">
+                            🏆 Achievements & Statistics
+                        </h2>
+                        <p class="text-gray-600">Track your progress and unlock rewards</p>
+                    </div>
+                    
+                    <!-- Achievement Progress Overview -->
+                    <div class="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border-2 border-purple-200 mb-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-lg font-bold text-game-dark">Achievement Progress</h3>
+                            <span id="achievementProgress" class="text-2xl font-bold text-purple-600">0/0</span>
+                        </div>
+                        <div class="progress-bar mb-2">
+                            <div id="achievementProgressBar" class="progress-bar-fill" style="width: 0%; background: linear-gradient(90deg, #8b5cf6, #3b82f6);"></div>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <span id="achievementPercentage">0%</span> complete
+                        </div>
+                    </div>
+                    
+                    <!-- Achievement Categories -->
+                    <div class="flex gap-2 mb-6 flex-wrap">
+                        <button class="achievement-filter active px-4 py-2 rounded-lg bg-game-primary text-white text-sm font-medium" data-category="all">
+                            All Achievements
+                        </button>
+                        <button class="achievement-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="clicking">
+                            Clicking
+                        </button>
+                        <button class="achievement-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="building">
+                            Building
+                        </button>
+                        <button class="achievement-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="population">
+                            Population
+                        </button>
+                        <button class="achievement-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="wealth">
+                            Wealth
+                        </button>
+                        <button class="achievement-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="special">
+                            Special
+                        </button>
+                    </div>
+                    
+                    <!-- Achievements Grid -->
+                    <div id="achievementsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                        <!-- Achievements will be dynamically generated here -->
+                    </div>
+                    
+                    <!-- Statistics Section -->
+                    <div class="border-t-2 border-gray-200 pt-6">
+                        <h3 class="text-xl font-bold text-game-dark mb-4 flex items-center gap-2">
+                            📊 Detailed Statistics
+                        </h3>
                         
-                        <!-- Houses -->
-                        <div class="building-card bg-gradient-to-br from-blue-50 to-blue-100 p-5 rounded-lg border-2 border-blue-200 transition-all duration-300">
-                            <div class="flex items-center gap-3 mb-4">
-                                <span class="text-3xl">🏠</span>
-                                <div>
-                                    <h3 class="text-xl font-bold text-game-dark">Houses</h3>
-                                    <p class="text-sm text-gray-600">Generate population over time</p>
-                                </div>
+                        <!-- Statistics Grid -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                                <div class="text-2xl font-bold text-blue-600" id="statTotalClicks">0</div>
+                                <div class="text-sm text-gray-600">Total Clicks</div>
+                                <div class="text-xs text-gray-500" id="statClicksPerSecond">0/sec avg</div>
                             </div>
                             
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-gray-700">Owned:</span>
-                                    <span id="housesOwned" class="text-lg font-bold text-game-primary">0</span>
-                                </div>
-                                
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-gray-700">Production:</span>
-                                    <span class="text-sm text-gray-600">+<span id="housesProduction">0</span> pop/sec</span>
-                                </div>
-                                
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-gray-700">Cost:</span>
-                                    <span id="housesCost" class="text-sm font-bold text-game-accent">10 coins</span>
-                                </div>
-                                
-                                <button id="buyHouseBtn" class="w-full bg-game-primary hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg font-semibold transition-all duration-200">
-                                    Buy House
-                                </button>
+                            <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                                <div class="text-2xl font-bold text-green-600" id="statTotalCoins">0</div>
+                                <div class="text-sm text-gray-600">Coins Earned</div>
+                                <div class="text-xs text-gray-500" id="statCoinsPerSecond">0/sec avg</div>
+                            </div>
+                            
+                            <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                                <div class="text-2xl font-bold text-purple-600" id="statTotalBuildings">0</div>
+                                <div class="text-sm text-gray-600">Buildings Built</div>
+                                <div class="text-xs text-gray-500" id="statBuildingsPerHour">0/hour avg</div>
+                            </div>
+                            
+                            <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-lg border border-yellow-200">
+                                <div class="text-2xl font-bold text-yellow-600" id="statMaxPopulation">0</div>
+                                <div class="text-sm text-gray-600">Max Population</div>
+                                <div class="text-xs text-gray-500" id="statCurrentPopulation">0 current</div>
+                            </div>
+                            
+                            <div class="bg-gradient-to-br from-pink-50 to-pink-100 p-4 rounded-lg border border-pink-200">
+                                <div class="text-2xl font-bold text-pink-600" id="statMaxHappiness">100</div>
+                                <div class="text-sm text-gray-600">Max Happiness</div>
+                                <div class="text-xs text-gray-500" id="statCurrentHappiness">100 current</div>
+                            </div>
+                            
+                            <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-4 rounded-lg border border-indigo-200">
+                                <div class="text-2xl font-bold text-indigo-600" id="statTotalResearch">0</div>
+                                <div class="text-sm text-gray-600">Research Earned</div>
+                                <div class="text-xs text-gray-500" id="statUpgradesPurchased">0 upgrades</div>
+                            </div>
+                            
+                            <div class="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-lg border border-red-200">
+                                <div class="text-2xl font-bold text-red-600" id="statGameTime">0s</div>
+                                <div class="text-sm text-gray-600">Time Played</div>
+                                <div class="text-xs text-gray-500" id="statSessionsPlayed">0 sessions</div>
+                            </div>
+                            
+                            <div class="bg-gradient-to-br from-teal-50 to-teal-100 p-4 rounded-lg border border-teal-200">
+                                <div class="text-2xl font-bold text-teal-600" id="statCurrentSession">0s</div>
+                                <div class="text-sm text-gray-600">This Session</div>
+                                <div class="text-xs text-gray-500" id="statSessionProgress">Starting...</div>
                             </div>
                         </div>
                         
-                        <!-- Shops -->
-                        <div class="building-card bg-gradient-to-br from-green-50 to-green-100 p-5 rounded-lg border-2 border-green-200 transition-all duration-300">
-                            <div class="flex items-center gap-3 mb-4">
-                                <span class="text-3xl">🏪</span>
-                                <div>
-                                    <h3 class="text-xl font-bold text-game-dark">Shops</h3>
-                                    <p class="text-sm text-gray-600">Generate coins from population</p>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-gray-700">Owned:</span>
-                                    <span id="shopsOwned" class="text-lg font-bold text-game-secondary">0</span>
-                                </div>
-                                
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-gray-700">Production:</span>
-                                    <span class="text-sm text-gray-600">+<span id="shopsProduction">0</span> coins/sec</span>
-                                </div>
-                                
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-gray-700">Cost:</span>
-                                    <span id="shopsCost" class="text-sm font-bold text-game-accent">50 coins</span>
-                                </div>
-                                
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-gray-700">Requires:</span>
-                                    <span class="text-sm text-gray-600">10 population</span>
-                                </div>
-                                
-                                <button id="buyShopBtn" class="w-full bg-game-secondary hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg font-semibold transition-all duration-200">
-                                    Buy Shop
-                                </button>
+                        <!-- Building Breakdown -->
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-game-dark mb-3">Building Breakdown</h4>
+                            <div id="buildingBreakdown" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 text-sm">
+                                <!-- Building breakdown will be generated here -->
                             </div>
                         </div>
-                        
-                        <!-- Factories -->
-                        <div class="building-card bg-gradient-to-br from-purple-50 to-purple-100 p-5 rounded-lg border-2 border-purple-200 transition-all duration-300">
-                            <div class="flex items-center gap-3 mb-4">
-                                <span class="text-3xl">🏭</span>
-                                <div>
-                                    <h3 class="text-xl font-bold text-game-dark">Factories</h3>
-                                    <p class="text-sm text-gray-600">Advanced coin production</p>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-gray-700">Owned:</span>
-                                    <span id="factoriesOwned" class="text-lg font-bold text-purple-600">0</span>
-                                </div>
-                                
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-gray-700">Production:</span>
-                                    <span class="text-sm text-gray-600">+<span id="factoriesProduction">0</span> coins/sec</span>
-                                </div>
-                                
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-gray-700">Cost:</span>
-                                    <span id="factoriesCost" class="text-sm font-bold text-game-accent">200 coins</span>
-                                </div>
-                                
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-gray-700">Requires:</span>
-                                    <span class="text-sm text-gray-600">50 population</span>
-                                </div>
-                                
-                                <button id="buyFactoryBtn" class="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg font-semibold transition-all duration-200">
-                                    Buy Factory
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Parks -->
-                        <div class="building-card bg-gradient-to-br from-pink-50 to-pink-100 p-5 rounded-lg border-2 border-pink-200 transition-all duration-300">
-                            <div class="flex items-center gap-3 mb-4">
-                                <span class="text-3xl">🌳</span>
-                                <div>
-                                    <h3 class="text-xl font-bold text-game-dark">Parks</h3>
-                                    <p class="text-sm text-gray-600">Increase city happiness</p>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-gray-700">Owned:</span>
-                                    <span id="parksOwned" class="text-lg font-bold text-pink-600">0</span>
-                                </div>
-                                
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-gray-700">Effect:</span>
-                                    <span class="text-sm text-gray-600">+<span id="parksEffect">0</span> happiness</span>
-                                </div>
-                                
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-gray-700">Cost:</span>
-                                    <span id="parksCost" class="text-sm font-bold text-game-accent">100 coins</span>
-                                </div>
-                                
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm font-medium text-gray-700">Requires:</span>
-                                    <span class="text-sm text-gray-600">25 population</span>
-                                </div>
-                                
-                                <button id="buyParkBtn" class="w-full bg-pink-600 hover:bg-pink-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg font-semibold transition-all duration-200">
-                                    Buy Park
-                                </button>
-                            </div>
-                        </div>
-                        
                     </div>
                 </div>
             </section>
@@ -345,10 +420,16 @@
         </div>
     </footer>
     
+    <!-- Notification Container -->
+    <div id="notificationContainer" class="notification-container"></div>
+    
     <!-- Game Scripts -->
     <script src="js/game.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/storage.js"></script>
+    <script src="js/achievements.js"></script>
+    <script src="js/statistics.js"></script>
+    <script src="js/testing.js"></script>
     
 </body>
 </html>

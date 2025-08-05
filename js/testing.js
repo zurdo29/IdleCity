@@ -1,0 +1,469 @@
+// IdleCity Testing and Validation System
+// Simple testing framework with console.assert statements and debugging utilities
+
+const Testing = {
+    enabled: true,
+    isRunning: false,
+    testResults: [],
+    
+    init() {
+        console.log('🧪 Initializing testing system...');
+        
+        if (this.enabled) {
+            this.runBasicTests();
+            this.setupErrorLogging();
+            this.setupDebugUtilities();
+        }
+        
+        console.log('✅ Testing system initialized');
+    },
+    
+    // Core game function tests using console.assert
+    runBasicTests() {
+        console.log('🔍 Running basic game function tests...');
+        this.isRunning = true;
+        
+        // Test building cost calculations
+        this.testBuildingCosts();
+        
+        // Test resource generation
+        this.testResourceGeneration();
+        
+        // Test save/load functionality
+        this.testSaveLoad();
+        
+        // Test UI number formatting
+        this.testNumberFormatting();
+        
+        // Test building unlock conditions
+        this.testBuildingUnlocks();
+        
+        this.isRunning = false;
+        console.log(`📊 Tests completed: ${this.testResults.length} assertions made`);
+    },
+    
+    testBuildingCosts() {
+        console.log('Testing building cost calculations...');
+        
+        // Test base costs
+        console.assert(Buildings.getCost('houses', 0) === 10, 'Houses base cost should be 10');
+        console.assert(Buildings.getCost('shops', 0) === 50, 'Shops base cost should be 50');
+        console.assert(Buildings.getCost('factories', 0) === 800, 'Factories base cost should be 800');
+        console.assert(Buildings.getCost('parks', 0) === 100, 'Parks base cost should be 100');
+        
+        // Test cost scaling
+        const houseCost1 = Buildings.getCost('houses', 1);
+        const houseCost0 = Buildings.getCost('houses', 0);
+        console.assert(houseCost1 > houseCost0, 'Building costs should increase with quantity');
+        console.assert(houseCost1 === Math.floor(10 * Math.pow(1.15, 1)), 'House cost scaling should match formula');
+        
+        // Test invalid building type (should handle gracefully)
+        try {
+            const invalidCost = Buildings.getCost('invalid');
+            console.assert(invalidCost === undefined || isNaN(invalidCost), 'Invalid building type should return undefined or NaN');
+        } catch (error) {
+            console.log('✅ Invalid building type properly throws error:', error.message);
+        }
+        
+        this.testResults.push('Building cost calculations');
+    },
+    
+    testResourceGeneration() {
+        console.log('Testing resource generation...');
+        
+        // Test production calculations
+        const originalHouses = GameState.buildings.houses;
+        GameState.buildings.houses = 5;
+        
+        const houseProduction = Buildings.getProduction('houses');
+        console.assert(houseProduction === 5 * BuildingConfig.houses.baseProduction * GameState.upgrades.efficiency, 
+            'House production calculation should be correct');
+        
+        // Test zero production
+        GameState.buildings.houses = 0;
+        console.assert(Buildings.getProduction('houses') === 0, 'Zero buildings should produce zero resources');
+        
+        // Restore original state
+        GameState.buildings.houses = originalHouses;
+        
+        this.testResults.push('Resource generation');
+    },
+    
+    testSaveLoad() {
+        console.log('Testing save/load functionality...');
+        
+        if (typeof Storage !== 'undefined' && Storage.isLocalStorageAvailable()) {
+            // Test save data validation
+            const validSaveData = {
+                version: '1.0.0',
+                timestamp: Date.now(),
+                gameState: {
+                    resources: { coins: 100, population: 50, happiness: 80 },
+                    buildings: { houses: 2, shops: 1, factories: 0, parks: 1 },
+                    upgrades: { efficiency: 1, automation: false, research: 0, prestige: 0 },
+                    statistics: { totalClicks: 10, gameTime: 300, buildingsPurchased: 4, totalCoinsEarned: 200 }
+                }
+            };
+            
+            console.assert(Storage.validateSaveData(validSaveData) === true, 'Valid save data should pass validation');
+            
+            // Test invalid save data
+            const invalidSaveData = { invalid: 'data' };
+            console.assert(Storage.validateSaveData(invalidSaveData) === false, 'Invalid save data should fail validation');
+            
+            // Test missing required fields
+            const incompleteSaveData = {
+                version: '1.0.0',
+                gameState: {
+                    resources: { coins: 100 }
+                    // Missing other required fields
+                }
+            };
+            console.assert(Storage.validateSaveData(incompleteSaveData) === false, 'Incomplete save data should fail validation');
+        }
+        
+        this.testResults.push('Save/load functionality');
+    },
+    
+    testNumberFormatting() {
+        console.log('Testing UI number formatting...');
+        
+        if (typeof UI !== 'undefined') {
+            // Test basic numbers
+            console.assert(UI.formatNumber(0) === '0', 'Zero should format as "0"');
+            console.assert(UI.formatNumber(999) === '999', 'Numbers under 1000 should not be abbreviated');
+            
+            // Test thousands
+            console.assert(UI.formatNumber(1000) === '1K', '1000 should format as "1K"');
+            console.assert(UI.formatNumber(1500) === '2K', '1500 should round to "2K"');
+            
+            // Test millions
+            console.assert(UI.formatNumber(1000000) === '1M', '1000000 should format as "1M"');
+            console.assert(UI.formatNumber(2500000) === '3M', '2500000 should round to "3M"');
+            
+            // Test billions
+            console.assert(UI.formatNumber(1000000000) === '1B', '1000000000 should format as "1B"');
+            
+            // Test decimals
+            console.assert(UI.formatNumber(1234.56, 1) === '1.2K', 'Decimal formatting should work correctly');
+        }
+        
+        this.testResults.push('Number formatting');
+    },
+    
+    testBuildingUnlocks() {
+        console.log('Testing building unlock conditions...');
+        
+        // Save original state
+        const originalResources = { ...GameState.resources };
+        
+        // Test houses (should always be unlocked)
+        console.assert(Buildings.isUnlocked('houses') === true, 'Houses should always be unlocked');
+        
+        // Test shops unlock condition
+        GameState.resources.population = 5;
+        console.assert(Buildings.isUnlocked('shops') === false, 'Shops should be locked with insufficient population');
+        
+        GameState.resources.population = 15;
+        console.assert(Buildings.isUnlocked('shops') === true, 'Shops should be unlocked with sufficient population');
+        
+        // Test factories unlock condition (now requires population 75 and coins 500)
+        GameState.resources.population = 50;
+        GameState.resources.coins = 300;
+        console.assert(Buildings.isUnlocked('factories') === false, 'Factories should be locked with insufficient requirements');
+        
+        GameState.resources.population = 80;
+        GameState.resources.coins = 600;
+        console.assert(Buildings.isUnlocked('factories') === true, 'Factories should be unlocked with sufficient requirements');
+        
+        // Restore original state
+        GameState.resources = originalResources;
+        
+        this.testResults.push('Building unlock conditions');
+    },
+    
+    // Error logging and debugging utilities
+    setupErrorLogging() {
+        console.log('Setting up error logging...');
+        
+        // Enhanced error logging
+        const originalError = console.error;
+        console.error = (...args) => {
+            // Log to our error tracking
+            this.logError('Console Error', args.join(' '));
+            
+            // Call original console.error
+            originalError.apply(console, args);
+        };
+        
+        // Global error handler
+        window.addEventListener('error', (event) => {
+            this.logError('JavaScript Error', {
+                message: event.message,
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno,
+                error: event.error
+            });
+        });
+        
+        // Unhandled promise rejection handler
+        window.addEventListener('unhandledrejection', (event) => {
+            this.logError('Unhandled Promise Rejection', event.reason);
+        });
+    },
+    
+    logError(type, details) {
+        const errorLog = {
+            timestamp: new Date().toISOString(),
+            type: type,
+            details: details,
+            gameState: {
+                coins: GameState.resources.coins,
+                population: GameState.resources.population,
+                gameTime: GameState.statistics.gameTime
+            }
+        };
+        
+        // Store in sessionStorage for debugging
+        try {
+            const existingLogs = JSON.parse(sessionStorage.getItem('idlecity_error_logs') || '[]');
+            existingLogs.push(errorLog);
+            
+            // Keep only last 50 errors
+            if (existingLogs.length > 50) {
+                existingLogs.splice(0, existingLogs.length - 50);
+            }
+            
+            sessionStorage.setItem('idlecity_error_logs', JSON.stringify(existingLogs));
+        } catch (e) {
+            console.warn('Could not store error log:', e);
+        }
+        
+        console.warn('🚨 Error logged:', errorLog);
+    },
+    
+    setupDebugUtilities() {
+        console.log('Setting up debug utilities...');
+        
+        // Enhanced debug commands
+        if (typeof window.GameDebug === 'undefined') {
+            window.GameDebug = {};
+        }
+        
+        Object.assign(window.GameDebug, {
+            // Resource manipulation
+            addCoins: (amount) => {
+                GameState.resources.coins += amount;
+                console.log(`💰 Added ${amount} coins (Total: ${GameState.resources.coins})`);
+                if (typeof UI !== 'undefined') UI.updateResourceDisplays();
+            },
+            
+            addPopulation: (amount) => {
+                GameState.resources.population += amount;
+                console.log(`👥 Added ${amount} population (Total: ${GameState.resources.population})`);
+                if (typeof UI !== 'undefined') UI.updateResourceDisplays();
+            },
+            
+            setHappiness: (amount) => {
+                GameState.resources.happiness = Math.max(0, Math.min(100, amount));
+                console.log(`😊 Set happiness to ${GameState.resources.happiness}`);
+                if (typeof UI !== 'undefined') UI.updateResourceDisplays();
+            },
+            
+            // Building manipulation
+            addBuilding: (type, amount = 1) => {
+                if (BuildingConfig[type]) {
+                    GameState.buildings[type] += amount;
+                    console.log(`🏢 Added ${amount} ${type} (Total: ${GameState.buildings[type]})`);
+                    if (typeof UI !== 'undefined') UI.updateBuildingDisplays();
+                } else {
+                    console.error(`Unknown building type: ${type}`);
+                }
+            },
+            
+            // Game state inspection
+            showState: () => {
+                console.log('🎮 Current Game State:', JSON.parse(JSON.stringify(GameState)));
+            },
+            
+            showConfig: () => {
+                console.log('⚙️ Building Configuration:', BuildingConfig);
+            },
+            
+            // Performance testing
+            testPerformance: (iterations = 1000) => {
+                console.log(`⚡ Running performance test with ${iterations} iterations...`);
+                const startTime = performance.now();
+                
+                for (let i = 0; i < iterations; i++) {
+                    GameLoop.tick();
+                }
+                
+                const endTime = performance.now();
+                const totalTime = endTime - startTime;
+                const avgTime = totalTime / iterations;
+                
+                console.log(`📊 Performance Results:
+                    Total time: ${totalTime.toFixed(2)}ms
+                    Average per tick: ${avgTime.toFixed(4)}ms
+                    Estimated FPS: ${(1000 / avgTime).toFixed(1)}`);
+            },
+            
+            // Error log inspection
+            showErrorLogs: () => {
+                try {
+                    const logs = JSON.parse(sessionStorage.getItem('idlecity_error_logs') || '[]');
+                    console.log('🚨 Error Logs:', logs);
+                    return logs;
+                } catch (e) {
+                    console.log('No error logs found');
+                    return [];
+                }
+            },
+            
+            clearErrorLogs: () => {
+                sessionStorage.removeItem('idlecity_error_logs');
+                console.log('🗑️ Error logs cleared');
+            },
+            
+            // Save/load testing
+            testSaveLoad: () => {
+                console.log('💾 Testing save/load functionality...');
+                
+                if (typeof Storage === 'undefined') {
+                    console.error('Storage system not available');
+                    return;
+                }
+                
+                const originalState = JSON.parse(JSON.stringify(GameState));
+                
+                // Save current state
+                const saveResult = Storage.saveGame();
+                console.log('Save result:', saveResult);
+                
+                // Modify state
+                GameState.resources.coins += 1000;
+                GameState.buildings.houses += 5;
+                
+                // Load saved state
+                const loadResult = Storage.loadGame();
+                console.log('Load result:', loadResult);
+                
+                // Verify state was restored
+                const stateMatches = JSON.stringify(GameState) === JSON.stringify(originalState);
+                console.log('State restored correctly:', stateMatches);
+                
+                return { saveResult, loadResult, stateMatches };
+            },
+            
+            // UI testing
+            testUI: () => {
+                console.log('🎨 Testing UI updates...');
+                
+                if (typeof UI === 'undefined') {
+                    console.error('UI system not available');
+                    return;
+                }
+                
+                // Test resource animations
+                UI.animateResourceGain('coins', 100);
+                UI.animateResourceGain('population', 10);
+                
+                // Test notifications
+                UI.showNotification('Test notification - Info', 'info', 2000);
+                setTimeout(() => UI.showNotification('Test notification - Success', 'success', 2000), 500);
+                setTimeout(() => UI.showNotification('Test notification - Warning', 'warning', 2000), 1000);
+                setTimeout(() => UI.showNotification('Test notification - Error', 'error', 2000), 1500);
+                
+                console.log('UI test animations and notifications triggered');
+            },
+            
+            // Run all tests
+            runAllTests: () => {
+                console.log('🧪 Running comprehensive test suite...');
+                Testing.runBasicTests();
+                window.GameDebug.testPerformance(100);
+                window.GameDebug.testSaveLoad();
+                window.GameDebug.testUI();
+                console.log('✅ All tests completed');
+            }
+        });
+        
+        console.log('🛠️ Debug utilities available via window.GameDebug');
+        console.log('Available commands: addCoins, addPopulation, setHappiness, addBuilding, showState, testPerformance, showErrorLogs, testSaveLoad, testUI, runAllTests');
+    },
+    
+    // Asset verification for deployment
+    verifyAssets() {
+        console.log('📦 Verifying game assets...');
+        
+        const requiredElements = [
+            'coinsCount', 'populationCount', 'happinessCount',
+            'buyHouseBtn', 'buyShopBtn', 'buyFactoryBtn', 'buyParkBtn',
+            'clickCoinsBtn', 'clickPopulationBtn'
+        ];
+        
+        const missingElements = [];
+        
+        requiredElements.forEach(elementId => {
+            const element = document.getElementById(elementId);
+            if (!element) {
+                missingElements.push(elementId);
+            }
+        });
+        
+        if (missingElements.length > 0) {
+            console.error('❌ Missing required DOM elements:', missingElements);
+            return false;
+        }
+        
+        // Verify JavaScript modules are loaded
+        const requiredModules = ['GameState', 'Buildings', 'GameLoop', 'Storage', 'UI'];
+        const missingModules = [];
+        
+        requiredModules.forEach(moduleName => {
+            if (typeof window[moduleName] === 'undefined') {
+                missingModules.push(moduleName);
+            }
+        });
+        
+        if (missingModules.length > 0) {
+            console.error('❌ Missing required modules:', missingModules);
+            return false;
+        }
+        
+        console.log('✅ All required assets verified');
+        return true;
+    },
+    
+    // Generate test report
+    generateTestReport() {
+        const report = {
+            timestamp: new Date().toISOString(),
+            testsRun: this.testResults.length,
+            assetVerification: this.verifyAssets(),
+            gameState: {
+                resources: { ...GameState.resources },
+                buildings: { ...GameState.buildings },
+                statistics: { ...GameState.statistics }
+            },
+            performance: {
+                gameLoopActive: GameLoop.intervalId !== null,
+                localStorageAvailable: typeof Storage !== 'undefined' ? Storage.isLocalStorageAvailable() : false
+            }
+        };
+        
+        console.log('📋 Test Report:', report);
+        return report;
+    }
+};
+
+// Initialize testing system when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        Testing.init();
+    });
+} else {
+    Testing.init();
+}

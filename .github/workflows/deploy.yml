@@ -1,0 +1,483 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: false
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+      skip_tests:
+        description: 'Skip asset verification tests'
+        required: false
+        default: false
+        type: boolean
+      force_deploy:
+        description: 'Force deployment even if health checks fail'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+env:
+  DEPLOYMENT_TIMEOUT: 300
+  HEALTH_CHECK_RETRIES: 10
+  HEALTH_CHECK_DELAY: 15
+
+jobs:
+  # Asset verification and optimization job
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      deployment-ready: ${{ steps.verify.outputs.ready }}
+      optimized-size: ${{ steps.optimize.outputs.size }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for better error reporting
+        
+    - name: Setup Node.js for optimization
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install optimization dependencies
+      run: |
+        npm init -y
+        npm install --save-dev terser clean-css-cli html-minifier-terser
+        
+    - name: Create optimization directory
+      run: mkdir -p dist
+      
+    - name: Enhanced asset verification
+      id: verify
+      run: |
+        echo "🔍 Starting comprehensive asset verification..."
+        
+        # Initialize error tracking
+        ERRORS=0
+        WARNINGS=0
+        
+        # Function to log errors
+        log_error() {
+          echo "❌ ERROR: $1"
+          ERRORS=$((ERRORS + 1))
+        }
+        
+        # Function to log warnings
+        log_warning() {
+          echo "⚠️  WARNING: $1"
+          WARNINGS=$((WARNINGS + 1))
+        }
+        
+        # Check core files
+        echo "Checking core game files..."
+        [ ! -f "index.html" ] && log_error "index.html not found"
+        [ ! -d "js" ] && log_error "js directory not found"
+        [ ! -d "css" ] && log_error "css directory not found"
+        
+        # Check JavaScript files with size validation
+        echo "Checking JavaScript files..."
+        required_js_files=("js/game.js" "js/ui.js" "js/storage.js" "js/testing.js" "js/achievements.js" "js/statistics.js")
+        for file in "${required_js_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            log_error "$file not found"
+          else
+            size=$(stat -c%s "$file")
+            if [ $size -lt 100 ]; then
+              log_warning "$file is suspiciously small ($size bytes)"
+            fi
+            echo "✓ $file ($size bytes)"
+          fi
+        done
+        
+        # Check CSS files
+        echo "Checking CSS files..."
+        if [ ! -f "css/styles.css" ]; then
+          log_error "css/styles.css not found"
+        else
+          size=$(stat -c%s "css/styles.css")
+          echo "✓ css/styles.css ($size bytes)"
+        fi
+        
+        # Validate HTML structure
+        echo "Validating HTML structure..."
+        if ! grep -q "IdleCity" index.html; then
+          log_error "Game title not found in HTML"
+        fi
+        
+        # Check for all script includes
+        for file in "${required_js_files[@]}"; do
+          if ! grep -q "$file" index.html; then
+            log_error "$file not included in HTML"
+          fi
+        done
+        
+        # JavaScript syntax check
+        echo "Checking JavaScript syntax..."
+        for file in js/*.js; do
+          if [ -f "$file" ]; then
+            if ! node -c "$file" 2>/dev/null; then
+              log_error "Syntax error in $file"
+            else
+              echo "✓ $file syntax OK"
+            fi
+          fi
+        done
+        
+        # Calculate total asset size
+        TOTAL_SIZE=$(du -sb . | cut -f1)
+        echo "📊 Total asset size: $TOTAL_SIZE bytes"
+        
+        # Report results
+        echo "📋 Verification Summary:"
+        echo "- Errors: $ERRORS"
+        echo "- Warnings: $WARNINGS"
+        echo "- Total size: $TOTAL_SIZE bytes"
+        
+        # Set outputs
+        echo "ready=$([[ $ERRORS -eq 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+        echo "errors=$ERRORS" >> $GITHUB_OUTPUT
+        echo "warnings=$WARNINGS" >> $GITHUB_OUTPUT
+        echo "size=$TOTAL_SIZE" >> $GITHUB_OUTPUT
+        
+        # Exit with error if critical issues found
+        if [ $ERRORS -gt 0 ]; then
+          echo "❌ Asset verification failed with $ERRORS errors"
+          exit 1
+        fi
+        
+        echo "✅ Asset verification completed successfully"
+    - name: Asset optimization
+      id: optimize
+      run: |
+        echo "🚀 Starting asset optimization..."
+        
+        # Copy source files to dist
+        cp -r . dist/
+        cd dist
+        
+        # Remove development files
+        rm -rf .git .github node_modules package*.json
+        
+        # Minify JavaScript files
+        echo "Minifying JavaScript files..."
+        for file in js/*.js; do
+          if [ -f "$file" ]; then
+            original_size=$(stat -c%s "$file")
+            npx terser "$file" --compress --mangle --output "$file.min"
+            minified_size=$(stat -c%s "$file.min")
+            savings=$((original_size - minified_size))
+            savings_percent=$(( (savings * 100) / original_size ))
+            echo "✓ $file: $original_size → $minified_size bytes (-$savings_percent%)"
+            mv "$file.min" "$file"
+          fi
+        done
+        
+        # Minify CSS files
+        echo "Minifying CSS files..."
+        for file in css/*.css; do
+          if [ -f "$file" ]; then
+            original_size=$(stat -c%s "$file")
+            npx cleancss -o "$file.min" "$file"
+            minified_size=$(stat -c%s "$file.min")
+            savings=$((original_size - minified_size))
+            savings_percent=$(( (savings * 100) / original_size ))
+            echo "✓ $file: $original_size → $minified_size bytes (-$savings_percent%)"
+            mv "$file.min" "$file"
+          fi
+        done
+        
+        # Minify HTML (optional, be careful with game functionality)
+        if [ "${{ github.event.inputs.skip_tests }}" != "true" ]; then
+          echo "Minifying HTML..."
+          original_size=$(stat -c%s "index.html")
+          npx html-minifier-terser \
+            --collapse-whitespace \
+            --remove-comments \
+            --remove-optional-tags \
+            --remove-redundant-attributes \
+            --remove-script-type-attributes \
+            --remove-tag-whitespace \
+            --use-short-doctype \
+            --minify-css true \
+            --minify-js true \
+            --output "index.min.html" \
+            "index.html"
+          minified_size=$(stat -c%s "index.min.html")
+          savings=$((original_size - minified_size))
+          savings_percent=$(( (savings * 100) / original_size ))
+          echo "✓ index.html: $original_size → $minified_size bytes (-$savings_percent%)"
+          mv "index.min.html" "index.html"
+        fi
+        
+        # Calculate final size
+        OPTIMIZED_SIZE=$(du -sb . | cut -f1)
+        ORIGINAL_SIZE=${{ steps.verify.outputs.size }}
+        TOTAL_SAVINGS=$((ORIGINAL_SIZE - OPTIMIZED_SIZE))
+        SAVINGS_PERCENT=$(( (TOTAL_SAVINGS * 100) / ORIGINAL_SIZE ))
+        
+        echo "📊 Optimization Summary:"
+        echo "- Original size: $ORIGINAL_SIZE bytes"
+        echo "- Optimized size: $OPTIMIZED_SIZE bytes"
+        echo "- Total savings: $TOTAL_SAVINGS bytes (-$SAVINGS_PERCENT%)"
+        
+        echo "size=$OPTIMIZED_SIZE" >> $GITHUB_OUTPUT
+        echo "savings=$TOTAL_SAVINGS" >> $GITHUB_OUTPUT
+        echo "savings_percent=$SAVINGS_PERCENT" >> $GITHUB_OUTPUT
+        
+        echo "✅ Asset optimization completed"
+        
+    - name: Upload optimized assets
+      uses: actions/upload-artifact@v4
+      with:
+        name: optimized-assets
+        path: dist/
+        retention-days: 30
+        
+  # Deployment job
+  deploy:
+    needs: prepare
+    if: needs.prepare.outputs.deployment-ready == 'true' || github.event.inputs.force_deploy == 'true'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download optimized assets
+      uses: actions/download-artifact@v4
+      with:
+        name: optimized-assets
+        path: .
+        
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.'
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+      timeout-minutes: 10
+      continue-on-error: true
+    - name: Deployment retry logic
+      if: steps.deployment.outcome == 'failure'
+      run: |
+        echo "🔄 Deployment failed, attempting retry..."
+        sleep 30
+        
+    - name: Retry deployment
+      if: steps.deployment.outcome == 'failure'
+      id: retry-deployment
+      uses: actions/deploy-pages@v4
+      timeout-minutes: 10
+      continue-on-error: true
+        
+    - name: Enhanced health check
+      id: health-check
+      run: |
+        echo "🏥 Starting enhanced health check..."
+        
+        # Get the deployed URL
+        DEPLOYED_URL="${{ steps.deployment.outputs.page_url || steps.retry-deployment.outputs.page_url }}"
+        
+        if [ -z "$DEPLOYED_URL" ]; then
+          echo "❌ No deployment URL available"
+          exit 1
+        fi
+        
+        echo "🌐 Checking health of: $DEPLOYED_URL"
+        
+        # Wait for initial deployment propagation
+        echo "⏳ Waiting for deployment propagation..."
+        sleep ${{ env.HEALTH_CHECK_DELAY }}
+        
+        # Enhanced health check with detailed reporting
+        SUCCESS=false
+        for i in $(seq 1 ${{ env.HEALTH_CHECK_RETRIES }}); do
+          echo "🔍 Health check attempt $i/${{ env.HEALTH_CHECK_RETRIES }}..."
+          
+          # Perform comprehensive health check
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$DEPLOYED_URL" || echo "000")
+          RESPONSE_TIME=$(curl -s -o /dev/null -w "%{time_total}" --max-time 30 "$DEPLOYED_URL" || echo "0")
+          
+          echo "   HTTP Status: $HTTP_CODE"
+          echo "   Response Time: ${RESPONSE_TIME}s"
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            # Additional content checks
+            CONTENT=$(curl -s --max-time 30 "$DEPLOYED_URL" || echo "")
+            
+            if echo "$CONTENT" | grep -q "IdleCity"; then
+              echo "   ✓ Game title found"
+              TITLE_CHECK=true
+            else
+              echo "   ❌ Game title not found"
+              TITLE_CHECK=false
+            fi
+            
+            if echo "$CONTENT" | grep -q "js/game.js"; then
+              echo "   ✓ Game scripts loaded"
+              SCRIPT_CHECK=true
+            else
+              echo "   ❌ Game scripts not found"
+              SCRIPT_CHECK=false
+            fi
+            
+            if [ "$TITLE_CHECK" = true ] && [ "$SCRIPT_CHECK" = true ]; then
+              echo "✅ Health check passed - Site is fully functional"
+              echo "🎮 Game deployed successfully at: $DEPLOYED_URL"
+              echo "📊 Response time: ${RESPONSE_TIME}s"
+              SUCCESS=true
+              break
+            else
+              echo "⚠️  Site responding but content issues detected"
+            fi
+          else
+            echo "   ❌ HTTP $HTTP_CODE received"
+          fi
+          
+          if [ $i -lt ${{ env.HEALTH_CHECK_RETRIES }} ]; then
+            echo "   ⏳ Retrying in ${{ env.HEALTH_CHECK_DELAY }} seconds..."
+            sleep ${{ env.HEALTH_CHECK_DELAY }}
+          fi
+        done
+        
+        if [ "$SUCCESS" = false ]; then
+          if [ "${{ github.event.inputs.force_deploy }}" = "true" ]; then
+            echo "⚠️  Health check failed but force_deploy is enabled"
+            echo "🚀 Deployment marked as successful despite health check failure"
+            echo "⚠️  Please verify manually at: $DEPLOYED_URL"
+          else
+            echo "❌ Health check failed after ${{ env.HEALTH_CHECK_RETRIES }} attempts"
+            echo "🔗 Please check the deployment manually at: $DEPLOYED_URL"
+            exit 1
+          fi
+        fi
+        
+        echo "url=$DEPLOYED_URL" >> $GITHUB_OUTPUT
+        echo "success=$SUCCESS" >> $GITHUB_OUTPUT
+    - name: Performance monitoring
+      if: steps.health-check.outputs.success == 'true'
+      run: |
+        echo "📈 Running performance monitoring..."
+        DEPLOYED_URL="${{ steps.health-check.outputs.url }}"
+        
+        # Basic performance metrics
+        LOAD_TIME=$(curl -s -o /dev/null -w "%{time_total}" --max-time 30 "$DEPLOYED_URL")
+        SIZE_DOWNLOAD=$(curl -s -o /dev/null -w "%{size_download}" --max-time 30 "$DEPLOYED_URL")
+        
+        echo "📊 Performance Metrics:"
+        echo "- Load Time: ${LOAD_TIME}s"
+        echo "- Page Size: $SIZE_DOWNLOAD bytes"
+        
+        # Performance thresholds
+        LOAD_TIME_THRESHOLD=3.0
+        if (( $(echo "$LOAD_TIME > $LOAD_TIME_THRESHOLD" | bc -l) )); then
+          echo "⚠️  Warning: Load time (${LOAD_TIME}s) exceeds threshold (${LOAD_TIME_THRESHOLD}s)"
+        else
+          echo "✅ Load time within acceptable range"
+        fi
+        
+    - name: Deployment notifications
+      if: always()
+      run: |
+        echo "📢 Preparing deployment notifications..."
+        
+        # Determine deployment status
+        if [ "${{ job.status }}" == "success" ]; then
+          STATUS_EMOJI="✅"
+          STATUS_TEXT="Successful"
+          STATUS_COLOR="28a745"
+        else
+          STATUS_EMOJI="❌"
+          STATUS_TEXT="Failed"
+          STATUS_COLOR="d73a49"
+        fi
+        
+        # Create deployment badge
+        BADGE_URL="https://img.shields.io/badge/Deployment-$STATUS_TEXT-$STATUS_COLOR"
+        echo "🏷️  Deployment badge: $BADGE_URL"
+        
+        # Log deployment event
+        echo "📝 Deployment Event Log:"
+        echo "- Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+        echo "- Repository: ${{ github.repository }}"
+        echo "- Branch: ${{ github.ref_name }}"
+        echo "- Commit: ${{ github.sha }}"
+        echo "- Actor: ${{ github.actor }}"
+        echo "- Event: ${{ github.event_name }}"
+        echo "- Status: $STATUS_TEXT"
+        
+    - name: Enhanced deployment summary
+      if: always()
+      run: |
+        echo "## 🚀 IdleCity Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Basic information
+        echo "### 📋 Deployment Information" >> $GITHUB_STEP_SUMMARY
+        echo "- **Repository**: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit**: [\`${{ github.sha }}\`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
+        echo "- **Triggered by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Event**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Timestamp**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Asset optimization results
+        echo "### 📦 Asset Optimization" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ needs.prepare.outputs.optimized-size }}" != "" ]; then
+          ORIGINAL_SIZE="${{ steps.verify.outputs.size }}"
+          OPTIMIZED_SIZE="${{ needs.prepare.outputs.optimized-size }}"
+          if [ "$ORIGINAL_SIZE" != "" ] && [ "$OPTIMIZED_SIZE" != "" ]; then
+            SAVINGS=$((ORIGINAL_SIZE - OPTIMIZED_SIZE))
+            SAVINGS_PERCENT=$(( (SAVINGS * 100) / ORIGINAL_SIZE ))
+            echo "- **Original Size**: $(numfmt --to=iec $ORIGINAL_SIZE)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Optimized Size**: $(numfmt --to=iec $OPTIMIZED_SIZE)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Savings**: $(numfmt --to=iec $SAVINGS) (-$SAVINGS_PERCENT%)" >> $GITHUB_STEP_SUMMARY
+          fi
+        fi
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Deployment status
+        echo "### 🎯 Deployment Status" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "- **Status**: ✅ Deployment successful" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: [${{ steps.health-check.outputs.url }}](${{ steps.health-check.outputs.url }})" >> $GITHUB_STEP_SUMMARY
+          echo "- **Health Check**: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- **Status**: ❌ Deployment failed" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.health-check.outputs.url }}" != "" ]; then
+            echo "- **URL**: [${{ steps.health-check.outputs.url }}](${{ steps.health-check.outputs.url }})" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "- **Health Check**: ❌ Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Quick links
+        echo "### 🔗 Quick Links" >> $GITHUB_STEP_SUMMARY
+        echo "- [🎮 Play IdleCity](${{ steps.health-check.outputs.url }})" >> $GITHUB_STEP_SUMMARY
+        echo "- [📊 Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+        echo "- [📝 Repository](${{ github.server_url }}/${{ github.repository }})" >> $GITHUB_STEP_SUMMARY

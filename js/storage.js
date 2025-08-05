@@ -46,7 +46,8 @@ const Storage = {
                     resources: { ...GameState.resources },
                     buildings: { ...GameState.buildings },
                     upgrades: { ...GameState.upgrades },
-                    statistics: { ...GameState.statistics }
+                    statistics: { ...GameState.statistics },
+                    achievements: GameState.achievements ? { ...GameState.achievements } : undefined
                 }
             };
             
@@ -167,24 +168,31 @@ const Storage = {
     applySaveData(saveData) {
         const loadedState = saveData.gameState;
         
-        // Load resources
-        GameState.resources.coins = Math.max(0, loadedState.resources.coins || 0);
-        GameState.resources.population = Math.max(0, loadedState.resources.population || 0);
-        GameState.resources.happiness = Math.max(0, Math.min(100, loadedState.resources.happiness || 100));
-        GameState.resources.energy = Math.max(0, Math.min(100, loadedState.resources.energy || 100));
+        // Load resources - dynamically load all resource types
+        Object.keys(GameState.resources).forEach(resourceType => {
+            if (resourceType === 'happiness' || resourceType === 'energy') {
+                GameState.resources[resourceType] = Math.max(0, Math.min(100, loadedState.resources[resourceType] || 100));
+            } else {
+                GameState.resources[resourceType] = Math.max(0, loadedState.resources[resourceType] || 0);
+            }
+        });
         
-        // Load buildings
-        GameState.buildings.houses = Math.max(0, loadedState.buildings.houses || 0);
-        GameState.buildings.shops = Math.max(0, loadedState.buildings.shops || 0);
-        GameState.buildings.factories = Math.max(0, loadedState.buildings.factories || 0);
-        GameState.buildings.parks = Math.max(0, loadedState.buildings.parks || 0);
+        // Load buildings - dynamically load all building types
+        Object.keys(GameState.buildings).forEach(buildingType => {
+            GameState.buildings[buildingType] = Math.max(0, loadedState.buildings[buildingType] || 0);
+        });
         
-        // Load upgrades
+        // Load upgrades - dynamically load all upgrade types
         if (loadedState.upgrades) {
-            GameState.upgrades.efficiency = Math.max(1, loadedState.upgrades.efficiency || 1);
-            GameState.upgrades.automation = loadedState.upgrades.automation || false;
-            GameState.upgrades.research = Math.max(0, loadedState.upgrades.research || 0);
-            GameState.upgrades.prestige = Math.max(0, loadedState.upgrades.prestige || 0);
+            Object.keys(GameState.upgrades).forEach(upgradeType => {
+                if (upgradeType === 'automation') {
+                    GameState.upgrades[upgradeType] = loadedState.upgrades[upgradeType] || false;
+                } else if (upgradeType === 'efficiency') {
+                    GameState.upgrades[upgradeType] = Math.max(1, loadedState.upgrades[upgradeType] || 1);
+                } else {
+                    GameState.upgrades[upgradeType] = Math.max(0, loadedState.upgrades[upgradeType] || 0);
+                }
+            });
         }
         
         // Load statistics
@@ -210,7 +218,25 @@ const Storage = {
             GameState.statistics.gameStartTime = currentTime - (GameState.statistics.gameTime * 1000);
         }
         
+        // Load achievements
+        if (loadedState.achievements && typeof Achievements !== 'undefined') {
+            GameState.achievements = { ...loadedState.achievements };
+            
+            // Restore unlocked achievements
+            if (GameState.achievements.unlocked) {
+                Achievements.unlockedAchievements = new Set(GameState.achievements.unlocked);
+                
+                // Update achievement states
+                Object.keys(Achievements.definitions).forEach(id => {
+                    Achievements.definitions[id].unlocked = Achievements.unlockedAchievements.has(id);
+                });
+            }
+        }
+        
         console.log('📊 Save data applied successfully');
+        console.log('🏗️ Loaded buildings:', GameState.buildings);
+        console.log('💰 Loaded resources:', GameState.resources);
+        console.log('⚡ Loaded upgrades:', GameState.upgrades);
     },
     
     calculateOfflineProgress(offlineSeconds) {
@@ -243,10 +269,10 @@ const Storage = {
         // Show offline progress notification
         if (typeof UI !== 'undefined' && (offlineCoins > 0 || offlinePopulation > 0)) {
             const timeString = this.formatOfflineTime(offlineSeconds);
-            let message = `Welcome back! You were offline for ${timeString}.\\n`;
+            let message = `Welcome back! You were offline for ${timeString}.\n`;
             
             if (offlineCoins > 0) {
-                message += `Earned ${UI.formatNumber(offlineCoins)} coins\\n`;
+                message += `Earned ${UI.formatNumber(offlineCoins)} coins\n`;
             }
             if (offlinePopulation > 0) {
                 message += `Gained ${UI.formatNumber(offlinePopulation)} population`;
