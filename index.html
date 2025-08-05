@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="IdleCity - A browser-based idle game where you build and manage your own city">
+    <title>IdleCity - Idle Game</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'game-primary': '#3b82f6',
+                        'game-secondary': '#10b981',
+                        'game-accent': '#f59e0b',
+                        'game-danger': '#ef4444',
+                        'game-dark': '#1f2937',
+                        'game-light': '#f9fafb'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen font-sans">
+    <!-- Game Header -->
+    <header class="bg-white shadow-lg border-b-4 border-game-primary">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-center md:text-left mb-4 md:mb-0">
+                    <h1 class="text-4xl md:text-5xl font-bold text-game-dark">
+                        🏙️ IdleCity
+                    </h1>
+                    <p class="text-gray-600 mt-2">Build your dream city, one click at a time</p>
+                </div>
+                
+                <!-- Game Controls -->
+                <div class="flex flex-wrap gap-2">
+                    <button id="saveBtn" class="bg-game-secondary hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2">
+                        💾 Save Game
+                    </button>
+                    <button id="loadBtn" class="bg-game-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2">
+                        📁 Load Game
+                    </button>
+                    <button id="resetBtn" class="bg-game-danger hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2">
+                        🔄 Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Game Container -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Resources Panel -->
+            <section class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200">
+                    <h2 class="text-2xl font-bold text-game-dark mb-6 flex items-center gap-2">
+                        💰 Resources
+                    </h2>
+                    
+                    <!-- Resource Counters -->
+                    <div class="space-y-4">
+                        <!-- Coins -->
+                        <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg border-2 border-yellow-200">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">🪙</span>
+                                    <div>
+                                        <h3 class="font-semibold text-game-dark">Coins</h3>
+                                        <p class="text-sm text-gray-600">Primary currency</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div id="coinsCount" class="text-2xl font-bold text-game-accent resource-counter">0</div>
+                                    <div class="text-sm text-gray-600">
+                                        +<span id="coinsPerSecond">0</span>/sec
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Population -->
+                        <div class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border-2 border-green-200">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">👥</span>
+                                    <div>
+                                        <h3 class="font-semibold text-game-dark">Population</h3>
+                                        <p class="text-sm text-gray-600">City residents</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div id="populationCount" class="text-2xl font-bold text-game-secondary resource-counter">0</div>
+                                    <div class="text-sm text-gray-600">
+                                        +<span id="populationPerSecond">0</span>/sec
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Happiness -->
+                        <div class="bg-gradient-to-r from-pink-50 to-pink-100 p-4 rounded-lg border-2 border-pink-200">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">😊</span>
+                                    <div>
+                                        <h3 class="font-semibold text-game-dark">Happiness</h3>
+                                        <p class="text-sm text-gray-600">City satisfaction</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div id="happinessCount" class="text-2xl font-bold text-pink-600 resource-counter">100</div>
+                                    <div class="text-sm text-gray-600">
+                                        <span id="happinessPerSecond">0</span>/sec
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Manual Actions -->
+                    <div class="mt-6 space-y-3">
+                        <h3 class="font-semibold text-game-dark mb-3">Manual Actions</h3>
+                        <button id="clickCoinsBtn" class="w-full bg-game-accent hover:bg-yellow-600 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95">
+                            🪙 Collect Coins (+1)
+                        </button>
+                        <button id="clickPopulationBtn" class="w-full bg-game-secondary hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95">
+                            👥 Attract Citizens (+1)
+                        </button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Buildings Panel -->
+            <section class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200">
+                    <h2 class="text-2xl font-bold text-game-dark mb-6 flex items-center gap-2">
+                        🏗️ Buildings
+                    </h2>
+                    
+                    <!-- Buildings Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- Houses -->
+                        <div class="building-card bg-gradient-to-br from-blue-50 to-blue-100 p-5 rounded-lg border-2 border-blue-200 transition-all duration-300">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="text-3xl">🏠</span>
+                                <div>
+                                    <h3 class="text-xl font-bold text-game-dark">Houses</h3>
+                                    <p class="text-sm text-gray-600">Generate population over time</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-700">Owned:</span>
+                                    <span id="housesOwned" class="text-lg font-bold text-game-primary">0</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-700">Production:</span>
+                                    <span class="text-sm text-gray-600">+<span id="housesProduction">0</span> pop/sec</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-700">Cost:</span>
+                                    <span id="housesCost" class="text-sm font-bold text-game-accent">10 coins</span>
+                                </div>
+                                
+                                <button id="buyHouseBtn" class="w-full bg-game-primary hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg font-semibold transition-all duration-200">
+                                    Buy House
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Shops -->
+                        <div class="building-card bg-gradient-to-br from-green-50 to-green-100 p-5 rounded-lg border-2 border-green-200 transition-all duration-300">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="text-3xl">🏪</span>
+                                <div>
+                                    <h3 class="text-xl font-bold text-game-dark">Shops</h3>
+                                    <p class="text-sm text-gray-600">Generate coins from population</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-700">Owned:</span>
+                                    <span id="shopsOwned" class="text-lg font-bold text-game-secondary">0</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-700">Production:</span>
+                                    <span class="text-sm text-gray-600">+<span id="shopsProduction">0</span> coins/sec</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-700">Cost:</span>
+                                    <span id="shopsCost" class="text-sm font-bold text-game-accent">50 coins</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-700">Requires:</span>
+                                    <span class="text-sm text-gray-600">10 population</span>
+                                </div>
+                                
+                                <button id="buyShopBtn" class="w-full bg-game-secondary hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg font-semibold transition-all duration-200">
+                                    Buy Shop
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Factories -->
+                        <div class="building-card bg-gradient-to-br from-purple-50 to-purple-100 p-5 rounded-lg border-2 border-purple-200 transition-all duration-300">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="text-3xl">🏭</span>
+                                <div>
+                                    <h3 class="text-xl font-bold text-game-dark">Factories</h3>
+                                    <p class="text-sm text-gray-600">Advanced coin production</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-700">Owned:</span>
+                                    <span id="factoriesOwned" class="text-lg font-bold text-purple-600">0</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-700">Production:</span>
+                                    <span class="text-sm text-gray-600">+<span id="factoriesProduction">0</span> coins/sec</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-700">Cost:</span>
+                                    <span id="factoriesCost" class="text-sm font-bold text-game-accent">200 coins</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-700">Requires:</span>
+                                    <span class="text-sm text-gray-600">50 population</span>
+                                </div>
+                                
+                                <button id="buyFactoryBtn" class="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg font-semibold transition-all duration-200">
+                                    Buy Factory
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Parks -->
+                        <div class="building-card bg-gradient-to-br from-pink-50 to-pink-100 p-5 rounded-lg border-2 border-pink-200 transition-all duration-300">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="text-3xl">🌳</span>
+                                <div>
+                                    <h3 class="text-xl font-bold text-game-dark">Parks</h3>
+                                    <p class="text-sm text-gray-600">Increase city happiness</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-700">Owned:</span>
+                                    <span id="parksOwned" class="text-lg font-bold text-pink-600">0</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-700">Effect:</span>
+                                    <span class="text-sm text-gray-600">+<span id="parksEffect">0</span> happiness</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-700">Cost:</span>
+                                    <span id="parksCost" class="text-sm font-bold text-game-accent">100 coins</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-700">Requires:</span>
+                                    <span class="text-sm text-gray-600">25 population</span>
+                                </div>
+                                
+                                <button id="buyParkBtn" class="w-full bg-pink-600 hover:bg-pink-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg font-semibold transition-all duration-200">
+                                    Buy Park
+                                </button>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </section>
+            
+        </div>
+        
+        <!-- Game Statistics -->
+        <section class="mt-8">
+            <div class="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200">
+                <h2 class="text-2xl font-bold text-game-dark mb-6 flex items-center gap-2">
+                    📊 Statistics
+                </h2>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <div class="text-2xl font-bold text-game-primary" id="totalClicks">0</div>
+                        <div class="text-sm text-gray-600">Total Clicks</div>
+                    </div>
+                    
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <div class="text-2xl font-bold text-game-secondary" id="totalBuildings">0</div>
+                        <div class="text-sm text-gray-600">Buildings Built</div>
+                    </div>
+                    
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <div class="text-2xl font-bold text-game-accent" id="gameTime">0s</div>
+                        <div class="text-sm text-gray-600">Time Played</div>
+                    </div>
+                    
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <div class="text-2xl font-bold text-pink-600" id="totalCoinsEarned">0</div>
+                        <div class="text-sm text-gray-600">Coins Earned</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-game-dark text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-lg font-semibold mb-2">🏙️ IdleCity</p>
+            <p class="text-gray-400">Build your dream city, one click at a time</p>
+            <p class="text-sm text-gray-500 mt-4">
+                Made with ❤️ using HTML5, CSS3, and JavaScript
+            </p>
+        </div>
+    </footer>
+    
+    <!-- Game Scripts -->
+    <script src="js/game.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/storage.js"></script>
+    
+</body>
+</html>

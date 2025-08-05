@@ -2,7 +2,9 @@
 
 ## Phase 1: Core Game Foundation
 
-- [-] 1. Set up project structure and Git repository
+- [x] 1. Set up project structure and Git repository
+
+
 
   - Initialize Git repository with proper .gitignore for web projects
   - Create basic directory structure (assets/, css/, js/)
@@ -10,7 +12,8 @@
   - Configure repository for GitHub Pages deployment
   - _Requirements: 7.1, 7.2, 7.3_
 
-- [ ] 2. Create basic HTML structure with Tailwind CSS
+- [-] 2. Create basic HTML structure with Tailwind CSS
+
   - Build index.html with semantic HTML structure and game containers
   - Integrate Tailwind CSS via CDN for rapid styling
   - Create responsive layout with resource display, building panels, and action buttons
