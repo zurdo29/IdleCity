@@ -1,377 +1,446 @@
-# 🧪 IdleCity - Testing Checklist
+# IdleCity - Testing Checklist
 
-## 📋 Comprehensive Testing Guide
+This document provides a comprehensive testing checklist for IdleCity to ensure quality and compatibility across different browsers and devices.
 
-This document provides a systematic approach to testing IdleCity across different browsers, devices, and scenarios to ensure a high-quality user experience.
+## Table of Contents
+- [Pre-Testing Setup](#pre-testing-setup)
+- [Core Functionality Tests](#core-functionality-tests)
+- [Browser Compatibility Tests](#browser-compatibility-tests)
+- [Device Compatibility Tests](#device-compatibility-tests)
+- [Performance Tests](#performance-tests)
+- [Accessibility Tests](#accessibility-tests)
+- [User Experience Tests](#user-experience-tests)
+- [Edge Case Tests](#edge-case-tests)
+- [Regression Tests](#regression-tests)
+- [Final Validation](#final-validation)
 
-## 🌐 Browser Compatibility Testing
+## Pre-Testing Setup
+
+### Environment Preparation
+- [ ] Clear browser cache and cookies
+- [ ] Disable browser extensions that might interfere
+- [ ] Ensure stable internet connection
+- [ ] Have multiple browsers installed for testing
+- [ ] Prepare test devices (mobile, tablet)
+- [ ] Set up screen recording for bug documentation
+
+### Test Data Preparation
+- [ ] Fresh game state (new player experience)
+- [ ] Mid-game save file (established player)
+- [ ] Late-game save file (advanced player)
+- [ ] Corrupted save file (error handling)
+- [ ] Large save file (performance testing)
+
+## Core Functionality Tests
+
+### Game Initialization
+- [ ] Game loads without errors
+- [ ] Initial resources are correct (0 coins, 0 population, 100 happiness)
+- [ ] UI elements are properly displayed
+- [ ] No JavaScript errors in console
+- [ ] Performance system initializes correctly
+
+### Resource Management
+- [ ] Manual coin collection works
+- [ ] Manual population attraction works
+- [ ] Resource counters update correctly
+- [ ] Resource generation rates display accurately
+- [ ] Progress bars function properly
+- [ ] Resource caps are enforced (population, happiness)
+
+### Building System
+- [ ] Building purchase works correctly
+- [ ] Cost calculation is accurate
+- [ ] Cost scaling functions properly
+- [ ] Building unlock conditions work
+- [ ] Building production is calculated correctly
+- [ ] Building categories function as intended
+- [ ] Tier progression works properly
+
+### Upgrade System
+- [ ] Upgrade purchases work correctly
+- [ ] Research point deduction is accurate
+- [ ] Upgrade effects are applied properly
+- [ ] Max level restrictions work
+- [ ] Upgrade categories filter correctly
+- [ ] Cost scaling functions properly
+
+### Achievement System
+- [ ] Achievements unlock correctly
+- [ ] Achievement conditions are accurate
+- [ ] Rewards are applied properly
+- [ ] Achievement progress tracking works
+- [ ] Achievement categories filter correctly
+- [ ] Achievement notifications display properly
+
+### Statistics System
+- [ ] Statistics track correctly
+- [ ] Statistics display accurately
+- [ ] Historical data is maintained
+- [ ] Session statistics work properly
+- [ ] Statistics reset with game reset
+
+## Browser Compatibility Tests
 
 ### Desktop Browsers
 
-#### **Chrome (Latest)**
-- [ ] Game loads without errors
-- [ ] All animations work smoothly
-- [ ] Save/load functionality works
-- [ ] Keyboard shortcuts respond correctly
-- [ ] Notifications display properly
-- [ ] Performance is acceptable (< 3s load time)
+#### Google Chrome (Latest)
+- [ ] Game loads and runs smoothly
+- [ ] All features function correctly
+- [ ] Performance is acceptable (>30 FPS)
+- [ ] Save/load works properly
+- [ ] No console errors
+- [ ] Responsive design works
 
-#### **Firefox (Latest)**
-- [ ] Game loads without errors
-- [ ] CSS animations render correctly
-- [ ] LocalStorage persistence works
-- [ ] Tab switching functions properly
-- [ ] Achievement system works
-- [ ] Console shows no errors
+#### Mozilla Firefox (Latest)
+- [ ] Game loads and runs smoothly
+- [ ] All features function correctly
+- [ ] Performance is acceptable
+- [ ] Save/load works properly
+- [ ] No console errors
+- [ ] Responsive design works
 
-#### **Safari (Latest)**
-- [ ] Game loads without errors
-- [ ] Tailwind CSS renders correctly
-- [ ] Touch events work (if applicable)
-- [ ] Auto-save functions properly
-- [ ] Progress bars animate correctly
-- [ ] Memory usage is reasonable
+#### Safari (Latest)
+- [ ] Game loads and runs smoothly
+- [ ] All features function correctly
+- [ ] Performance is acceptable
+- [ ] Save/load works properly
+- [ ] No console errors
+- [ ] Responsive design works
 
-#### **Edge (Latest)**
-- [ ] Game loads without errors
-- [ ] All JavaScript features work
-- [ ] UI elements are properly styled
-- [ ] Game loop runs smoothly
-- [ ] Statistics track correctly
-- [ ] Deployment works from GitHub Pages
+#### Microsoft Edge (Latest)
+- [ ] Game loads and runs smoothly
+- [ ] All features function correctly
+- [ ] Performance is acceptable
+- [ ] Save/load works properly
+- [ ] No console errors
+- [ ] Responsive design works
 
-### Mobile Browsers
+### Older Browser Versions
+- [ ] Chrome 80+ compatibility
+- [ ] Firefox 75+ compatibility
+- [ ] Safari 13+ compatibility
+- [ ] Edge 80+ compatibility
+- [ ] Graceful degradation for unsupported features
 
-#### **iOS Safari**
-- [ ] Game loads on iPhone/iPad
-- [ ] Touch controls are responsive
-- [ ] Swipe gestures work correctly
-- [ ] Text is readable without zooming
-- [ ] Buttons are appropriately sized
-- [ ] Performance is acceptable on older devices
+## Device Compatibility Tests
 
-#### **Android Chrome**
-- [ ] Game loads on various Android devices
-- [ ] Touch interactions work smoothly
-- [ ] Responsive design adapts correctly
-- [ ] Offline functionality works
-- [ ] Battery usage is reasonable
-- [ ] Memory management is efficient
+### Mobile Devices
 
-## 📱 Device Testing
+#### iOS Devices
+- [ ] iPhone (various sizes) - Portrait mode
+- [ ] iPhone (various sizes) - Landscape mode
+- [ ] iPad - Portrait mode
+- [ ] iPad - Landscape mode
+- [ ] Touch interactions work properly
+- [ ] Responsive layout adapts correctly
+- [ ] Performance is acceptable
+- [ ] Save/load functions properly
 
-### Screen Sizes and Resolutions
+#### Android Devices
+- [ ] Android phones (various sizes) - Portrait mode
+- [ ] Android phones (various sizes) - Landscape mode
+- [ ] Android tablets - Portrait mode
+- [ ] Android tablets - Landscape mode
+- [ ] Touch interactions work properly
+- [ ] Responsive layout adapts correctly
+- [ ] Performance is acceptable
+- [ ] Save/load functions properly
 
-#### **Desktop (1920x1080+)**
-- [ ] Layout uses full screen effectively
-- [ ] All elements are properly positioned
-- [ ] Text is readable at normal zoom
-- [ ] No horizontal scrolling required
-- [ ] Hover effects work correctly
+### Desktop Resolutions
+- [ ] 1920x1080 (Full HD)
+- [ ] 1366x768 (Common laptop)
+- [ ] 1280x720 (HD)
+- [ ] 2560x1440 (2K)
+- [ ] 3840x2160 (4K)
+- [ ] Ultra-wide displays (21:9)
 
-#### **Laptop (1366x768)**
-- [ ] Layout adapts to smaller screen
-- [ ] All content fits without scrolling
-- [ ] UI elements remain accessible
-- [ ] Performance is maintained
-- [ ] Font sizes are appropriate
+### Zoom Levels
+- [ ] 50% zoom
+- [ ] 75% zoom
+- [ ] 100% zoom (default)
+- [ ] 125% zoom
+- [ ] 150% zoom
+- [ ] 200% zoom
 
-#### **Tablet (768x1024)**
-- [ ] Responsive design activates
-- [ ] Touch targets are appropriately sized
-- [ ] Layout stacks correctly
-- [ ] All functionality remains accessible
-- [ ] Performance is smooth
+## Performance Tests
 
-#### **Mobile (375x667)**
-- [ ] Mobile layout is used
-- [ ] All content is accessible
-- [ ] Touch targets meet minimum size (44px)
-- [ ] Text remains readable
-- [ ] Navigation is intuitive
+### Frame Rate Testing
+- [ ] Maintains >30 FPS during normal gameplay
+- [ ] Maintains >30 FPS with many buildings
+- [ ] Maintains >30 FPS during intensive operations
+- [ ] Performance degrades gracefully under load
+- [ ] Performance indicator shows accurate information
 
-## 🎮 Functional Testing
+### Memory Usage Testing
+- [ ] Memory usage stays reasonable (<100MB)
+- [ ] No memory leaks during extended play
+- [ ] Memory cleanup functions properly
+- [ ] Garbage collection works effectively
+- [ ] Performance doesn't degrade over time
 
-### Core Game Mechanics
+### Load Testing
+- [ ] Game handles large save files
+- [ ] Game handles many simultaneous operations
+- [ ] Game handles rapid clicking
+- [ ] Game handles tab switching
+- [ ] Game handles browser minimization
 
-#### **Resource Generation**
-- [ ] Manual clicking generates resources
-- [ ] Buildings generate resources automatically
-- [ ] Resource counters update in real-time
-- [ ] Production rates are calculated correctly
-- [ ] Offline progress calculates properly
+### Network Testing
+- [ ] Game works offline (after initial load)
+- [ ] Game handles network interruptions
+- [ ] CDN resources load properly
+- [ ] Fallbacks work for failed resources
 
-#### **Building System**
-- [ ] All building types can be purchased
-- [ ] Unlock conditions work correctly
-- [ ] Cost scaling functions properly
-- [ ] Building effects apply correctly
-- [ ] Tier progression works as expected
-
-#### **Upgrade System**
-- [ ] All upgrades can be purchased
-- [ ] Upgrade effects apply correctly
-- [ ] Cost scaling works properly
-- [ ] Max level limits are enforced
-- [ ] Category multipliers function correctly
-
-#### **Achievement System**
-- [ ] Achievements unlock when conditions are met
-- [ ] Progress tracking works correctly
-- [ ] Rewards are applied properly
-- [ ] Achievement notifications appear
-- [ ] Achievement persistence works
-
-### User Interface Testing
-
-#### **Navigation**
-- [ ] All tabs switch correctly
-- [ ] Filters work in each tab
-- [ ] Buttons respond to clicks
-- [ ] Keyboard navigation works
-- [ ] Mobile navigation is intuitive
-
-#### **Visual Feedback**
-- [ ] Animations play smoothly
-- [ ] Progress bars update correctly
-- [ ] Notifications appear and dismiss
-- [ ] Hover effects work on desktop
-- [ ] Loading states are clear
-
-#### **Data Display**
-- [ ] Numbers format correctly (K, M, B notation)
-- [ ] Statistics update in real-time
-- [ ] Time formatting is accurate
-- [ ] Progress percentages are correct
-- [ ] Building breakdown displays properly
-
-### Save/Load System Testing
-
-#### **Save Functionality**
-- [ ] Manual save works correctly
-- [ ] Auto-save triggers every 10 seconds
-- [ ] All game state is preserved
-- [ ] Save data is valid JSON
-- [ ] Large save files don't cause issues
-
-#### **Load Functionality**
-- [ ] Game loads from save correctly
-- [ ] All resources are restored
-- [ ] Building counts are accurate
-- [ ] Upgrade levels are preserved
-- [ ] Achievement progress is maintained
-
-#### **Offline Progress**
-- [ ] Offline time is calculated correctly
-- [ ] Resource generation continues offline
-- [ ] Maximum offline time is enforced (24 hours)
-- [ ] Offline progress notification appears
-- [ ] Game state remains consistent
-
-## ♿ Accessibility Testing
+## Accessibility Tests
 
 ### Keyboard Navigation
-- [ ] All interactive elements are keyboard accessible
-- [ ] Tab order is logical and intuitive
+- [ ] Tab navigation works through all interactive elements
+- [ ] Keyboard shortcuts function properly
 - [ ] Focus indicators are visible
-- [ ] Keyboard shortcuts work correctly
 - [ ] No keyboard traps exist
+- [ ] Enter/Space activate buttons properly
 
 ### Screen Reader Compatibility
-- [ ] Semantic HTML structure is used
-- [ ] ARIA labels are present where needed
-- [ ] Content is announced correctly
+- [ ] Screen reader can read all text content
+- [ ] Interactive elements are properly labeled
 - [ ] Dynamic content updates are announced
-- [ ] Form elements have proper labels
+- [ ] Navigation structure is logical
+- [ ] Alternative text is provided where needed
 
 ### Visual Accessibility
-- [ ] Color contrast meets WCAG AA standards
-- [ ] Text is readable at 200% zoom
-- [ ] Focus indicators are clearly visible
-- [ ] No information is conveyed by color alone
-- [ ] Animations can be disabled if needed
+- [ ] Sufficient color contrast ratios
+- [ ] Text is readable at various sizes
+- [ ] UI works without color alone
+- [ ] High contrast mode compatibility
+- [ ] Reduced motion preferences respected
 
 ### Motor Accessibility
-- [ ] Click targets are at least 44px
-- [ ] Drag and drop is not required
-- [ ] Time limits can be extended
+- [ ] Large enough touch targets (44px minimum)
+- [ ] No time-sensitive interactions required
 - [ ] Alternative input methods work
-- [ ] No rapid flashing content
+- [ ] Drag and drop has alternatives
+- [ ] Hover states have alternatives
 
-## 🚀 Performance Testing
+## User Experience Tests
 
-### Load Performance
-- [ ] Initial page load < 3 seconds
-- [ ] JavaScript execution < 1 second
-- [ ] CSS rendering is smooth
-- [ ] Images load efficiently
-- [ ] No render-blocking resources
+### New Player Experience
+- [ ] Game is intuitive for new players
+- [ ] Tutorial elements are clear
+- [ ] First actions are obvious
+- [ ] Early progression feels rewarding
+- [ ] Help information is accessible
 
-### Runtime Performance
-- [ ] Game loop maintains 60fps
-- [ ] Memory usage remains stable
-- [ ] No memory leaks detected
-- [ ] CPU usage is reasonable
-- [ ] Battery impact is minimal (mobile)
+### Gameplay Flow
+- [ ] Progression feels balanced
+- [ ] No dead ends or impossible states
+- [ ] Feedback is immediate and clear
+- [ ] Goals are achievable and motivating
+- [ ] Idle mechanics work as expected
 
-### Network Performance
-- [ ] Game works on slow connections
-- [ ] Offline functionality works
-- [ ] Asset caching is effective
-- [ ] CDN resources load reliably
-- [ ] Fallbacks work when CDN fails
+### Interface Usability
+- [ ] Buttons are appropriately sized
+- [ ] Information is clearly organized
+- [ ] Navigation is intuitive
+- [ ] Visual hierarchy is clear
+- [ ] Responsive design works well
 
-## 🔒 Security Testing
+### Notification System
+- [ ] Notifications appear at appropriate times
+- [ ] Notifications don't obstruct gameplay
+- [ ] Notifications can be dismissed
+- [ ] Notification timing is appropriate
+- [ ] Achievement notifications are celebratory
 
-### Data Security
-- [ ] No sensitive data in localStorage
-- [ ] Input validation prevents XSS
-- [ ] No eval() or similar dangerous functions
-- [ ] External resources are trusted
-- [ ] No data leakage in console
+## Edge Case Tests
 
-### Privacy
-- [ ] No unnecessary data collection
-- [ ] No tracking without consent
-- [ ] Local data stays local
-- [ ] No personal information stored
-- [ ] Clear data deletion options
+### Data Validation
+- [ ] Game handles corrupted save data
+- [ ] Game handles missing save data
+- [ ] Game handles invalid input values
+- [ ] Game handles extreme resource values
+- [ ] Game handles negative values properly
 
-## 🐛 Error Handling Testing
+### Error Scenarios
+- [ ] Game recovers from JavaScript errors
+- [ ] Game handles localStorage failures
+- [ ] Game handles DOM manipulation errors
+- [ ] Game handles network failures
+- [ ] Game provides meaningful error messages
 
-### JavaScript Errors
-- [ ] Game handles localStorage unavailability
-- [ ] Corrupted save data is handled gracefully
-- [ ] Network errors don't break the game
-- [ ] Invalid input is handled properly
-- [ ] Fallbacks work when features fail
+### Boundary Testing
+- [ ] Maximum resource values
+- [ ] Maximum building counts
+- [ ] Maximum upgrade levels
+- [ ] Minimum resource values
+- [ ] Zero-state scenarios
 
-### Edge Cases
-- [ ] Very large numbers are handled correctly
-- [ ] Negative values are prevented
-- [ ] Division by zero is avoided
-- [ ] Null/undefined values are handled
-- [ ] Race conditions are prevented
+### Timing Issues
+- [ ] Game handles rapid clicking
+- [ ] Game handles simultaneous operations
+- [ ] Game handles tab switching during operations
+- [ ] Game handles system sleep/wake
+- [ ] Game handles clock changes
 
-## 📊 Deployment Testing
+## Regression Tests
 
-### GitHub Pages Deployment
-- [ ] Automated deployment works
-- [ ] Asset optimization functions correctly
-- [ ] Health checks pass
-- [ ] Performance monitoring works
-- [ ] Error reporting functions
+### Save/Load System
+- [ ] Old save files still load correctly
+- [ ] Save data structure is maintained
+- [ ] Offline progress calculation works
+- [ ] Export/import functionality works
+- [ ] Data validation prevents corruption
 
-### Manual Deployment
-- [ ] Manual triggers work correctly
-- [ ] Deployment status is accurate
-- [ ] Rollback procedures work
-- [ ] Monitoring tools function
-- [ ] Documentation is accurate
+### Performance System
+- [ ] Performance monitoring works correctly
+- [ ] Degraded mode activates appropriately
+- [ ] Memory cleanup functions properly
+- [ ] Error recovery works as expected
+- [ ] Performance indicators are accurate
 
-## 🧪 Automated Testing
+### UI System
+- [ ] Dynamic content generation works
+- [ ] Tab switching functions properly
+- [ ] Responsive design adapts correctly
+- [ ] Animations and transitions work
+- [ ] Notification system functions properly
 
-### Console Testing
+### Game Logic
+- [ ] Resource generation is accurate
+- [ ] Building costs scale properly
+- [ ] Upgrade effects apply correctly
+- [ ] Achievement conditions work
+- [ ] Statistics track accurately
+
+## Final Validation
+
+### Pre-Release Checklist
+- [ ] All critical bugs fixed
+- [ ] Performance meets requirements
+- [ ] Accessibility standards met
+- [ ] Browser compatibility confirmed
+- [ ] Mobile experience optimized
+- [ ] Documentation updated
+- [ ] Testing completed across all categories
+
+### Release Criteria
+- [ ] No critical or high-priority bugs
+- [ ] Performance score >70 on target devices
+- [ ] Works on all supported browsers
+- [ ] Passes accessibility audit
+- [ ] User experience is smooth and intuitive
+- [ ] Save/load system is reliable
+- [ ] Error handling is robust
+
+### Post-Release Monitoring
+- [ ] Monitor error rates
+- [ ] Track performance metrics
+- [ ] Collect user feedback
+- [ ] Monitor browser compatibility
+- [ ] Track save/load success rates
+
+## Testing Tools and Commands
+
+### Browser Developer Tools
 ```javascript
-// Run these commands in browser console
-GameDebug.runAllTests();        // Run all built-in tests
-GameDebug.testProduction();     // Test production calculations
-GameDebug.testSaveLoad();       // Test save/load functionality
-GameDebug.testPerformance();    // Test performance metrics
+// Performance monitoring
+Performance.getReport()
+
+// Memory usage check
+console.log(performance.memory)
+
+// Error log review
+console.log(Performance.errors.errorLog)
+
+// Game state inspection
+console.log(GameState)
+
+// Force save/load test
+Storage.saveGame()
+Storage.loadGame()
 ```
 
-### Performance Monitoring
+### Automated Testing
 ```javascript
-// Monitor performance over time
-GameDebug.testPerformance(1000); // Run for 1000 iterations
+// Run all tests
+Testing.runAllTests()
+
+// Specific test categories
+Testing.runGameLogicTests()
+Testing.runUITests()
+Testing.runStorageTests()
+Testing.runPerformanceTests()
+
+// Stress testing
+Testing.stressTest()
 ```
 
-## 📝 Test Reporting
+### Manual Testing Helpers
+```javascript
+// Add resources for testing
+GameState.resources.coins += 10000
+GameState.resources.research += 1000
 
-### Bug Report Template
+// Unlock all buildings
+Object.keys(GameState.buildings).forEach(building => {
+    GameState.buildings[building] = 1
+})
+
+// Complete all achievements
+Achievements.unlockAll()
+
+// Reset to specific state
+Testing.setGameState('midgame')
+```
+
+## Bug Reporting Template
+
+When reporting bugs found during testing, use this template:
+
 ```
 **Bug Title**: Brief description of the issue
 
-**Environment**:
-- Browser: [Chrome/Firefox/Safari/Edge] [Version]
-- OS: [Windows/macOS/Linux/iOS/Android] [Version]
-- Device: [Desktop/Mobile/Tablet] [Model if mobile]
+**Severity**: Critical/High/Medium/Low
+
+**Browser/Device**: Chrome 91 on Windows 10
 
 **Steps to Reproduce**:
 1. Step one
 2. Step two
 3. Step three
 
-**Expected Behavior**: What should happen
+**Expected Result**: What should happen
 
-**Actual Behavior**: What actually happens
+**Actual Result**: What actually happens
 
-**Screenshots**: If applicable
+**Screenshots/Video**: Attach if applicable
 
 **Console Errors**: Any JavaScript errors
 
 **Additional Notes**: Any other relevant information
 ```
 
-### Performance Report Template
-```
-**Performance Test Results**
+## Testing Schedule
 
-**Environment**: [Browser/Device/Connection]
-**Test Duration**: [Time period]
+### Pre-Release Testing
+- **Week 1**: Core functionality and browser compatibility
+- **Week 2**: Device compatibility and performance testing
+- **Week 3**: Accessibility and user experience testing
+- **Week 4**: Edge cases and regression testing
+- **Week 5**: Final validation and bug fixes
 
-**Metrics**:
-- Load Time: [X] seconds
-- Memory Usage: [X] MB
-- CPU Usage: [X]%
-- Frame Rate: [X] fps
-- Battery Impact: [Low/Medium/High]
-
-**Issues Found**: List any performance issues
-**Recommendations**: Suggested improvements
-```
-
-## ✅ Pre-Release Checklist
-
-### Final Verification
-- [ ] All critical bugs are fixed
-- [ ] Performance meets targets
-- [ ] Accessibility requirements are met
-- [ ] Cross-browser compatibility confirmed
-- [ ] Mobile experience is optimized
-- [ ] Documentation is complete and accurate
-- [ ] Deployment process is tested
-- [ ] Monitoring is in place
-- [ ] Rollback plan is ready
-
-### Sign-off
-- [ ] Developer testing complete
-- [ ] QA testing complete (if applicable)
-- [ ] Accessibility review complete
-- [ ] Performance review complete
-- [ ] Security review complete
-- [ ] Documentation review complete
+### Ongoing Testing
+- **Weekly**: Automated test runs
+- **Monthly**: Full compatibility testing
+- **Quarterly**: Comprehensive accessibility audit
+- **Per Release**: Full regression testing
 
 ---
 
-## 🎯 Testing Best Practices
+## Conclusion
 
-### Regular Testing
-- Test after every significant change
-- Use multiple browsers during development
-- Test on real devices, not just emulators
-- Include accessibility testing in regular workflow
+This testing checklist ensures IdleCity maintains high quality across all supported platforms and use cases. Regular testing prevents regressions and ensures a smooth user experience.
 
-### Automated Testing
-- Use browser developer tools for performance profiling
-- Set up automated deployment testing
-- Monitor real user performance
-- Track error rates and user feedback
+Remember: Quality is everyone's responsibility, and thorough testing is essential for a successful game launch and ongoing maintenance.
 
-### Documentation
-- Keep testing documentation up to date
-- Document known issues and workarounds
-- Maintain browser compatibility matrix
-- Record performance benchmarks
-
-**Remember**: Good testing ensures a great user experience! 🚀
+Happy testing! 🧪

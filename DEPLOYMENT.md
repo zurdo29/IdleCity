@@ -1,270 +1,659 @@
-# IdleCity Deployment Guide
+# IdleCity - Deployment Guide
 
-## 🚀 Deployment Overview
+This document provides comprehensive instructions for deploying IdleCity to various hosting platforms.
 
-IdleCity features a comprehensive deployment system with automated optimization, monitoring, and error handling. The deployment workflow is designed for GitHub Pages but can be adapted for other static hosting services.
+## Table of Contents
+- [Overview](#overview)
+- [GitHub Pages Deployment](#github-pages-deployment)
+- [Alternative Hosting Platforms](#alternative-hosting-platforms)
+- [Custom Server Deployment](#custom-server-deployment)
+- [CDN Configuration](#cdn-configuration)
+- [Monitoring and Maintenance](#monitoring-and-maintenance)
+- [Troubleshooting](#troubleshooting)
 
-## 📋 Features
+## Overview
 
-### ✅ **Enhanced GitHub Actions Workflow**
-- **Automated Asset Optimization**: JavaScript, CSS, and HTML minification
-- **Retry Logic**: Automatic retry on deployment failures
-- **Enhanced Health Checks**: Comprehensive site validation with content verification
-- **Performance Monitoring**: Response time and size tracking
-- **Manual Deployment Triggers**: Workflow dispatch with customizable options
-- **Detailed Reporting**: Comprehensive deployment summaries with optimization metrics
+IdleCity is a client-side web application that can be deployed to any static hosting service. The game requires:
+- Static file hosting
+- HTTPS support (recommended)
+- No server-side processing
+- No database requirements
 
-### ✅ **Deployment Tools**
-- **Asset Optimizer**: Standalone tool for optimizing game assets
-- **Deployment Monitor**: Health checking and performance monitoring
-- **Status Script**: Comprehensive deployment status and management
+### Deployment Requirements
+- **Web Server**: Any static file server (Apache, Nginx, GitHub Pages, etc.)
+- **HTTPS**: Recommended for security and modern browser features
+- **Compression**: Gzip compression recommended for better performance
+- **Caching**: Appropriate cache headers for static assets
 
-## 🔧 GitHub Actions Workflow
+## GitHub Pages Deployment
 
-### Workflow Features
+### Automatic Deployment (Recommended)
 
-#### **Manual Deployment Options**
+The project includes GitHub Actions for automatic deployment:
+
+#### 1. Repository Setup
+```bash
+# Clone or fork the repository
+git clone https://github.com/username/idlecity.git
+cd idlecity
+
+# Ensure you're on the main branch
+git checkout main
+```
+
+#### 2. Enable GitHub Pages
+1. Go to repository Settings
+2. Navigate to "Pages" section
+3. Select "GitHub Actions" as source
+4. The workflow will deploy automatically on push to main
+
+#### 3. Workflow Configuration
+The `.github/workflows/deploy.yml` file handles deployment:
+
 ```yaml
-# Trigger manual deployment with options
-workflow_dispatch:
-  inputs:
-    environment:        # production/staging
-    skip_tests:        # Skip asset verification
-    force_deploy:      # Force deploy even if health checks fail
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: '.'
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
 ```
 
-#### **Two-Stage Deployment**
-1. **Prepare Stage**: Asset verification and optimization
-2. **Deploy Stage**: Deployment with enhanced monitoring
+#### 4. Verify Deployment
+- Check Actions tab for deployment status
+- Visit `https://username.github.io/idlecity`
+- Test all game functionality
 
-#### **Asset Optimization**
-- JavaScript minification with Terser
-- CSS minification with clean-css
-- HTML minification with html-minifier-terser
-- Size reporting and savings calculation
-- Development file cleanup
+### Manual GitHub Pages Deployment
 
-#### **Enhanced Health Checks**
-- Multiple retry attempts (configurable)
-- Content validation (game title, scripts, styles)
-- Response time monitoring
-- Detailed error reporting
-
-#### **Comprehensive Reporting**
-- Deployment summary with optimization metrics
-- Performance analysis
-- Quick links to deployed site and workflow
-- Error tracking and notifications
-
-## 🛠️ Deployment Tools
-
-### 1. Asset Optimizer (`scripts/optimize-assets.js`)
-
-Optimizes game assets for production deployment.
-
-#### Usage:
+#### 1. Create gh-pages Branch
 ```bash
-node scripts/optimize-assets.js [options]
+# Create and switch to gh-pages branch
+git checkout --orphan gh-pages
 
-Options:
-  --input <dir>     Input directory (default: .)
-  --output <dir>    Output directory (default: dist)
-  --no-js           Skip JavaScript minification
-  --no-css          Skip CSS minification
-  --no-html         Skip HTML minification
-  --verbose         Verbose output
+# Remove all files
+git rm -rf .
+
+# Copy game files
+cp -r ../main-branch/* .
+
+# Commit and push
+git add .
+git commit -m "Deploy to GitHub Pages"
+git push origin gh-pages
 ```
 
-#### Features:
-- JavaScript minification with compression and mangling
-- CSS optimization with clean-css
-- HTML minification with game-safe options
-- Development file cleanup
-- Detailed optimization reporting
+#### 2. Configure Repository
+1. Go to Settings > Pages
+2. Select "Deploy from a branch"
+3. Choose "gh-pages" branch
+4. Select "/ (root)" folder
 
-### 2. Deployment Monitor (`scripts/deploy-monitor.js`)
+## Alternative Hosting Platforms
 
-Monitors deployment health and performance.
+### Netlify Deployment
 
-#### Usage:
+#### 1. Direct Git Integration
+1. Connect your GitHub repository to Netlify
+2. Set build command: (leave empty)
+3. Set publish directory: `/`
+4. Deploy automatically on git push
+
+#### 2. Manual Upload
+1. Create a zip file of your project
+2. Drag and drop to Netlify dashboard
+3. Configure custom domain if needed
+
+#### 3. Netlify Configuration
+Create `netlify.toml` in project root:
+```toml
+[build]
+  publish = "."
+  
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+```
+
+### Vercel Deployment
+
+#### 1. Git Integration
 ```bash
-node scripts/deploy-monitor.js <url> [options]
+# Install Vercel CLI
+npm i -g vercel
 
-Options:
-  --retries <n>     Number of retry attempts (default: 5)
-  --timeout <ms>    Request timeout (default: 30000)
-  --interval <ms>   Retry interval (default: 10000)
-  --monitor <ms>    Monitor for duration (default: 300000)
-  --verbose         Verbose output
+# Deploy from project directory
+vercel
+
+# Follow prompts to configure
 ```
 
-#### Features:
-- HTTP status code checking
-- Content validation (game title, scripts, styles)
-- Response time measurement
-- Performance monitoring over time
-- Detailed analysis and reporting
+#### 2. Configuration
+Create `vercel.json`:
+```json
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    }
+  ]
+}
+```
 
-### 3. Deployment Status Script (`scripts/deployment-status.sh`)
+### Firebase Hosting
 
-Comprehensive deployment management tool.
-
-#### Usage:
+#### 1. Setup Firebase
 ```bash
-./scripts/deployment-status.sh [command] [options]
+# Install Firebase CLI
+npm install -g firebase-tools
 
-Commands:
-  status          Show current deployment status
-  monitor <url>   Monitor deployment health
-  optimize        Optimize assets for deployment
-  deploy          Trigger manual deployment
-  logs            Show deployment logs
-  clean           Clean deployment artifacts
+# Login to Firebase
+firebase login
+
+# Initialize project
+firebase init hosting
 ```
 
-#### Features:
-- Deployment status tracking
-- File verification
-- GitHub Actions integration
-- Log management
-- Artifact cleanup
+#### 2. Configuration
+Configure `firebase.json`:
+```json
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=31536000"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
 
-## 📊 Deployment Process
-
-### Automatic Deployment (Push to main)
-1. **Trigger**: Push to main branch
-2. **Verification**: Enhanced asset verification with syntax checking
-3. **Optimization**: Asset minification and compression
-4. **Deployment**: Deploy to GitHub Pages with retry logic
-5. **Health Check**: Comprehensive site validation
-6. **Monitoring**: Performance metrics collection
-7. **Reporting**: Detailed deployment summary
-
-### Manual Deployment
-1. **GitHub UI**: Go to Actions → Deploy to GitHub Pages → Run workflow
-2. **GitHub CLI**: `gh workflow run deploy.yml`
-3. **Status Script**: `./scripts/deployment-status.sh deploy`
-
-## 🔍 Monitoring and Troubleshooting
-
-### Health Check Process
-1. **HTTP Status**: Verify 200 OK response
-2. **Content Validation**: Check for game title and scripts
-3. **Performance**: Measure response time and size
-4. **Retry Logic**: Up to 10 attempts with configurable delays
-
-### Common Issues and Solutions
-
-#### **Deployment Fails**
-- Check GitHub Actions logs
-- Verify all required files exist
-- Run local asset verification: `./scripts/deployment-status.sh status`
-
-#### **Health Check Fails**
-- Wait for DNS propagation (can take up to 10 minutes)
-- Check if site is accessible manually
-- Use force deploy option if content is correct
-
-#### **Performance Issues**
-- Review optimization report for large files
-- Check network conditions
-- Monitor over time: `node scripts/deploy-monitor.js <url> --monitor 300000`
-
-### Debugging Commands
+#### 3. Deploy
 ```bash
-# Check deployment status
-./scripts/deployment-status.sh status
-
-# Monitor deployment health
-./scripts/deployment-status.sh monitor https://your-site.github.io
-
-# View deployment logs
-./scripts/deployment-status.sh logs
-
-# Optimize assets locally
-./scripts/deployment-status.sh optimize
-
-# Clean deployment artifacts
-./scripts/deployment-status.sh clean
+firebase deploy
 ```
 
-## 📈 Performance Optimization
+### Surge.sh Deployment
 
-### Asset Optimization Results
-Typical optimization savings:
-- **JavaScript**: 30-50% size reduction
-- **CSS**: 20-40% size reduction  
-- **HTML**: 10-20% size reduction
-- **Total**: 25-45% overall size reduction
+#### 1. Install and Deploy
+```bash
+# Install Surge
+npm install -g surge
 
-### Performance Targets
-- **Load Time**: < 3 seconds
-- **First Contentful Paint**: < 2 seconds
-- **Time to Interactive**: < 4 seconds
+# Deploy from project directory
+surge
 
-## 🔐 Security Considerations
-
-### Deployment Security
-- GitHub Actions secrets for sensitive data
-- Repository access controls
-- Automated security scanning
-- Content Security Policy headers
-
-### Asset Security
-- Input validation for all optimizations
-- Safe HTML minification options
-- Script integrity verification
-- XSS prevention in dynamic content
-
-## 🚀 Advanced Configuration
-
-### Environment Variables
-```yaml
-env:
-  DEPLOYMENT_TIMEOUT: 300      # Deployment timeout in seconds
-  HEALTH_CHECK_RETRIES: 10     # Number of health check attempts
-  HEALTH_CHECK_DELAY: 15       # Delay between health checks
+# Follow prompts for domain configuration
 ```
 
-### Custom Optimization
+## Custom Server Deployment
+
+### Apache Configuration
+
+#### 1. Virtual Host Setup
+```apache
+<VirtualHost *:80>
+    ServerName idlecity.example.com
+    DocumentRoot /var/www/idlecity
+    
+    # Enable compression
+    LoadModule deflate_module modules/mod_deflate.so
+    <Location />
+        SetOutputFilter DEFLATE
+        SetEnvIfNoCase Request_URI \
+            \.(?:gif|jpe?g|png)$ no-gzip dont-vary
+        SetEnvIfNoCase Request_URI \
+            \.(?:exe|t?gz|zip|bz2|sit|rar)$ no-gzip dont-vary
+    </Location>
+    
+    # Cache headers
+    <FilesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg)$">
+        ExpiresActive On
+        ExpiresDefault "access plus 1 year"
+    </FilesMatch>
+    
+    # Security headers
+    Header always set X-Frame-Options DENY
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-XSS-Protection "1; mode=block"
+</VirtualHost>
+```
+
+#### 2. .htaccess Configuration
+```apache
+# Enable compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+</IfModule>
+
+# Cache headers
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/ico "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options DENY
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+```
+
+### Nginx Configuration
+
+#### 1. Server Block
+```nginx
+server {
+    listen 80;
+    server_name idlecity.example.com;
+    root /var/www/idlecity;
+    index index.html;
+    
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types
+        text/plain
+        text/css
+        text/xml
+        text/javascript
+        application/javascript
+        application/xml+rss
+        application/json;
+    
+    # Cache static assets
+    location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+    
+    # Security headers
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header Referrer-Policy "strict-origin-when-cross-origin";
+    
+    # Main location
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+#### 2. HTTPS Configuration
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name idlecity.example.com;
+    
+    ssl_certificate /path/to/certificate.crt;
+    ssl_certificate_key /path/to/private.key;
+    
+    # SSL configuration
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    
+    # Include previous configuration here
+}
+
+# Redirect HTTP to HTTPS
+server {
+    listen 80;
+    server_name idlecity.example.com;
+    return 301 https://$server_name$request_uri;
+}
+```
+
+## CDN Configuration
+
+### Cloudflare Setup
+
+#### 1. DNS Configuration
+1. Add your domain to Cloudflare
+2. Update nameservers at your registrar
+3. Configure DNS records to point to your hosting
+
+#### 2. Performance Settings
+- **Caching Level**: Standard
+- **Browser Cache TTL**: 1 year for static assets
+- **Always Online**: Enabled
+- **Minification**: Enable for CSS, JS, HTML
+
+#### 3. Security Settings
+- **Security Level**: Medium
+- **Challenge Passage**: 30 minutes
+- **Browser Integrity Check**: Enabled
+- **Hotlink Protection**: Enabled
+
+#### 4. Page Rules
+```
+idlecity.example.com/css/*
+- Cache Level: Cache Everything
+- Edge Cache TTL: 1 year
+
+idlecity.example.com/js/*
+- Cache Level: Cache Everything
+- Edge Cache TTL: 1 year
+```
+
+### AWS CloudFront
+
+#### 1. Distribution Setup
+```json
+{
+  "DistributionConfig": {
+    "CallerReference": "idlecity-distribution",
+    "Origins": {
+      "Quantity": 1,
+      "Items": [
+        {
+          "Id": "idlecity-origin",
+          "DomainName": "your-bucket.s3.amazonaws.com",
+          "S3OriginConfig": {
+            "OriginAccessIdentity": ""
+          }
+        }
+      ]
+    },
+    "DefaultCacheBehavior": {
+      "TargetOriginId": "idlecity-origin",
+      "ViewerProtocolPolicy": "redirect-to-https",
+      "Compress": true,
+      "CachePolicyId": "managed-caching-optimized"
+    }
+  }
+}
+```
+
+## Monitoring and Maintenance
+
+### Health Checks
+
+#### 1. Automated Monitoring
+Create `scripts/health-check.js`:
 ```javascript
-// Custom optimization options
-const optimizer = new AssetOptimizer({
-  inputDir: './src',
-  outputDir: './dist',
-  minifyJS: true,
-  minifyCSS: true,
-  minifyHTML: false,  // Disable HTML minification
-  verbose: true
+const https = require('https');
+
+function healthCheck(url) {
+    return new Promise((resolve, reject) => {
+        https.get(url, (res) => {
+            if (res.statusCode === 200) {
+                resolve('OK');
+            } else {
+                reject(`Status: ${res.statusCode}`);
+            }
+        }).on('error', reject);
+    });
+}
+
+// Check main site
+healthCheck('https://idlecity.example.com')
+    .then(() => console.log('✅ Site is healthy'))
+    .catch(err => console.error('❌ Site check failed:', err));
+```
+
+#### 2. Uptime Monitoring
+Set up monitoring with services like:
+- **UptimeRobot**: Free uptime monitoring
+- **Pingdom**: Comprehensive monitoring
+- **StatusCake**: Website monitoring
+- **New Relic**: Application performance monitoring
+
+### Performance Monitoring
+
+#### 1. Core Web Vitals
+Monitor key metrics:
+- **Largest Contentful Paint (LCP)**: < 2.5s
+- **First Input Delay (FID)**: < 100ms
+- **Cumulative Layout Shift (CLS)**: < 0.1
+
+#### 2. Monitoring Tools
+- **Google PageSpeed Insights**: Performance analysis
+- **GTmetrix**: Detailed performance reports
+- **WebPageTest**: Advanced performance testing
+- **Lighthouse**: Built-in Chrome auditing
+
+### Log Analysis
+
+#### 1. Server Logs
+Monitor for:
+- 404 errors (missing files)
+- 500 errors (server issues)
+- High traffic patterns
+- Bot traffic
+
+#### 2. Client-Side Monitoring
+```javascript
+// Add to performance.js
+window.addEventListener('error', (event) => {
+    // Log client-side errors
+    console.error('Client error:', event.error);
+    
+    // Send to monitoring service (optional)
+    // sendErrorToMonitoring(event.error);
 });
 ```
 
-### Monitoring Configuration
-```javascript
-// Custom monitoring setup
-const monitor = new DeploymentMonitor(url, {
-  timeout: 30000,
-  retries: 10,
-  interval: 15000,
-  verbose: true
-});
+## Troubleshooting
+
+### Common Deployment Issues
+
+#### 1. Files Not Loading (404 Errors)
+**Symptoms**: Game doesn't load, missing resources
+**Solutions**:
+- Check file paths are correct
+- Verify case sensitivity (especially on Linux servers)
+- Ensure all files are uploaded
+- Check server configuration
+
+#### 2. CORS Issues
+**Symptoms**: JavaScript errors about cross-origin requests
+**Solutions**:
+- Use proper web server instead of file:// protocol
+- Configure CORS headers if needed
+- Check for mixed content (HTTP/HTTPS)
+
+#### 3. Caching Issues
+**Symptoms**: Changes not appearing, old version loading
+**Solutions**:
+- Clear browser cache
+- Update cache headers
+- Use cache busting techniques
+- Check CDN cache settings
+
+#### 4. Performance Issues
+**Symptoms**: Slow loading, poor frame rates
+**Solutions**:
+- Enable compression (gzip)
+- Optimize images
+- Use CDN
+- Check server resources
+
+#### 5. Mobile Issues
+**Symptoms**: Game doesn't work on mobile devices
+**Solutions**:
+- Test responsive design
+- Check touch event handling
+- Verify mobile browser compatibility
+- Test on actual devices
+
+### Debugging Deployment
+
+#### 1. Browser Developer Tools
+- **Network Tab**: Check for failed requests
+- **Console Tab**: Look for JavaScript errors
+- **Application Tab**: Check localStorage functionality
+- **Performance Tab**: Analyze loading performance
+
+#### 2. Server-Side Debugging
+```bash
+# Check server logs
+tail -f /var/log/apache2/access.log
+tail -f /var/log/apache2/error.log
+
+# Test server response
+curl -I https://idlecity.example.com
+
+# Check file permissions
+ls -la /var/www/idlecity/
 ```
 
-## 📚 Additional Resources
+#### 3. Network Testing
+```bash
+# Test DNS resolution
+nslookup idlecity.example.com
 
-- [GitHub Pages Documentation](https://docs.github.com/en/pages)
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [Web Performance Best Practices](https://web.dev/performance/)
-- [Asset Optimization Guide](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency)
+# Test connectivity
+ping idlecity.example.com
 
-## 🆘 Support
+# Test HTTPS certificate
+openssl s_client -connect idlecity.example.com:443
+```
 
-If you encounter issues with deployment:
+### Recovery Procedures
 
-1. **Check Status**: `./scripts/deployment-status.sh status`
-2. **Review Logs**: Check GitHub Actions logs and local deployment logs
-3. **Monitor Health**: Use deployment monitor to verify site functionality
-4. **Force Deploy**: Use manual deployment with force option if needed
-5. **Clean and Retry**: Clean artifacts and retry deployment
+#### 1. Rollback Deployment
+```bash
+# GitHub Pages
+git revert HEAD
+git push origin main
 
-For persistent issues, check the GitHub repository issues or create a new issue with deployment logs and error details.
+# Manual deployment
+cp -r backup/* /var/www/idlecity/
+```
+
+#### 2. Emergency Maintenance
+```html
+<!-- Create maintenance.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IdleCity - Maintenance</title>
+</head>
+<body>
+    <h1>Maintenance in Progress</h1>
+    <p>IdleCity is currently undergoing maintenance. Please check back soon!</p>
+</body>
+</html>
+```
+
+## Security Considerations
+
+### Content Security Policy
+Add CSP headers:
+```
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' cdn.tailwindcss.com; img-src 'self' data:; connect-src 'self';
+```
+
+### HTTPS Configuration
+- Use strong SSL/TLS configuration
+- Enable HSTS headers
+- Redirect HTTP to HTTPS
+- Use secure cookies if applicable
+
+### Regular Updates
+- Monitor for security vulnerabilities
+- Update server software regularly
+- Review access logs for suspicious activity
+- Implement rate limiting if needed
+
+---
+
+## Conclusion
+
+IdleCity can be deployed to various hosting platforms with minimal configuration. The key is ensuring proper static file serving, compression, and security headers.
+
+Choose the deployment method that best fits your needs:
+- **GitHub Pages**: Free, automatic, great for open source
+- **Netlify/Vercel**: Easy setup, good performance, free tier available
+- **Custom Server**: Full control, requires more maintenance
+- **CDN**: Best performance, higher cost
+
+For questions about deployment, please refer to the issue tracker or contact the development team.
+
+Happy deploying! 🚀

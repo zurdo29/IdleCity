@@ -462,8 +462,22 @@ const Testing = {
 // Initialize testing system when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        Testing.init();
+        setTimeout(() => {
+            if (typeof GameState !== 'undefined' && typeof Buildings !== 'undefined') {
+                Testing.init();
+            } else {
+                console.warn('⚠️ Game systems not ready, delaying testing init');
+                setTimeout(() => Testing.init(), 1000);
+            }
+        }, 500);
     });
 } else {
-    Testing.init();
+    setTimeout(() => {
+        if (typeof GameState !== 'undefined' && typeof Buildings !== 'undefined') {
+            Testing.init();
+        } else {
+            console.warn('⚠️ Game systems not ready, delaying testing init');
+            setTimeout(() => Testing.init(), 1000);
+        }
+    }, 500);
 }

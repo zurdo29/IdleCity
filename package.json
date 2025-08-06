@@ -1,0 +1,59 @@
+{
+  "name": "idlecity-game",
+  "version": "1.0.0",
+  "description": "A browser-based idle city building game",
+  "main": "index.html",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:performance": "playwright test --grep @performance",
+    "test:all": "npm run test && npm run test:e2e",
+    "dev": "npx http-server . -p 3000 -c-1",
+    "build": "npm run test:all && npm run optimize",
+    "optimize": "node scripts/optimize-assets.js"
+  },
+  "keywords": [
+    "idle",
+    "game",
+    "city",
+    "builder",
+    "javascript"
+  ],
+  "author": "IdleCity Development Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/jest": "^29.5.14",
+    "http-server": "^14.1.1",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setup.js"
+    ],
+    "collectCoverageFrom": [
+      "js/**/*.js",
+      "!js/testing.js",
+      "!**/node_modules/**"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 60,
+        "functions": 60,
+        "lines": 60,
+        "statements": 60
+      }
+    },
+    "testMatch": [
+      "**/tests/unit/**/*.test.js"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/tests/e2e/"
+    ]
+  }
+}

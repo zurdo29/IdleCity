@@ -1,0 +1,93 @@
+{
+  "timestamp": "2025-08-06T00:32:58.406Z",
+  "url": "http://localhost:9000",
+  "score": 100,
+  "results": {
+    "passed": 14,
+    "failed": 0,
+    "warnings": 0,
+    "details": [
+      {
+        "type": "passed",
+        "title": "X-Frame-Options configured",
+        "description": "DENY"
+      },
+      {
+        "type": "passed",
+        "title": "X-Content-Type-Options configured",
+        "description": "nosniff"
+      },
+      {
+        "type": "passed",
+        "title": "X-XSS-Protection configured",
+        "description": "1; mode=block"
+      },
+      {
+        "type": "passed",
+        "title": "Referrer-Policy configured",
+        "description": "strict-origin-when-cross-origin"
+      },
+      {
+        "type": "passed",
+        "title": "Content-Security-Policy configured",
+        "description": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self';"
+      },
+      {
+        "type": "warning",
+        "title": "Inline scripts detected",
+        "description": "Found 1 inline script(s)"
+      },
+      {
+        "type": "passed",
+        "title": "No inline styles",
+        "description": "All styles are external"
+      },
+      {
+        "type": "warning",
+        "title": "External CDN resources",
+        "description": "Consider using SRI for CDN resources"
+      },
+      {
+        "type": "passed",
+        "title": ".git not accessible",
+        "description": "Sensitive file is properly protected"
+      },
+      {
+        "type": "passed",
+        "title": "node_modules not accessible",
+        "description": "Sensitive file is properly protected"
+      },
+      {
+        "type": "passed",
+        "title": ".env* not accessible",
+        "description": "Sensitive file is properly protected"
+      },
+      {
+        "type": "passed",
+        "title": "*.log not accessible",
+        "description": "Sensitive file is properly protected"
+      },
+      {
+        "type": "passed",
+        "title": "*.key not accessible",
+        "description": "Sensitive file is properly protected"
+      },
+      {
+        "type": "passed",
+        "title": "*.pem not accessible",
+        "description": "Sensitive file is properly protected"
+      },
+      {
+        "type": "passed",
+        "title": "config.json not accessible",
+        "description": "Sensitive file is properly protected"
+      },
+      {
+        "type": "passed",
+        "title": "secrets.json not accessible",
+        "description": "Sensitive file is properly protected"
+      }
+    ],
+    "warning": null
+  }
+}

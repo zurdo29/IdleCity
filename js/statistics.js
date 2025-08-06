@@ -351,9 +351,9 @@ if (document.readyState === 'loading') {
                 Statistics.init();
             } else {
                 console.warn('⚠️ GameState not ready, delaying statistics init');
-                setTimeout(() => Statistics.init(), 500);
+                setTimeout(() => Statistics.init(), 1000);
             }
-        }, 250);
+        }, 700);
     });
 } else {
     setTimeout(() => {
@@ -361,7 +361,7 @@ if (document.readyState === 'loading') {
             Statistics.init();
         } else {
             console.warn('⚠️ GameState not ready, delaying statistics init');
-            setTimeout(() => Statistics.init(), 500);
+            setTimeout(() => Statistics.init(), 1000);
         }
-    }, 250);
+    }, 700);
 }

@@ -114,7 +114,7 @@ const Achievements = {
             id: 'firstCoins',
             name: 'Penny Pincher',
             description: 'Earn 100 total coins',
-            icon: '🪙',
+            icon: '💰',
             category: 'wealth',
             condition: () => GameState.statistics.totalCoinsEarned >= 100,
             reward: { happiness: 5 },
@@ -423,9 +423,9 @@ if (document.readyState === 'loading') {
                 Achievements.init();
             } else {
                 console.warn('⚠️ GameState not ready, delaying achievements init');
-                setTimeout(() => Achievements.init(), 500);
+                setTimeout(() => Achievements.init(), 1000);
             }
-        }, 200);
+        }, 600);
     });
 } else {
     setTimeout(() => {
@@ -433,7 +433,7 @@ if (document.readyState === 'loading') {
             Achievements.init();
         } else {
             console.warn('⚠️ GameState not ready, delaying achievements init');
-            setTimeout(() => Achievements.init(), 500);
+            setTimeout(() => Achievements.init(), 1000);
         }
-    }, 200);
+    }, 600);
 }

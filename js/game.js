@@ -341,19 +341,68 @@ const GameLoop = {
     tickRate: 100, // 10 ticks per second for smooth updates
     lastSaveTime: null, // Track last auto-save time
     uiUpdateCounter: 0, // Counter for UI updates
+    performanceMode: false, // Performance optimization flag
 
     start() {
         if (this.intervalId) return; // Already running
 
         console.log('🎮 Starting game loop...');
+        
+        // Use performance-optimized timing if available
+        if (typeof Performance !== 'undefined' && Performance.state.isRunning) {
+            this.startOptimizedLoop();
+        } else {
+            this.startStandardLoop();
+        }
+    },
+
+    startStandardLoop() {
         this.intervalId = setInterval(() => {
-            this.tick();
+            try {
+                this.tick();
+            } catch (error) {
+                if (typeof Performance !== 'undefined') {
+                    Performance.handleError('gameLoop', error);
+                } else {
+                    console.error('❌ Game loop error:', error);
+                }
+            }
         }, this.tickRate);
+    },
+
+    startOptimizedLoop() {
+        let lastTime = performance.now();
+        const targetInterval = this.tickRate;
+        
+        const loop = (currentTime) => {
+            if (!this.intervalId) return; // Loop stopped
+            
+            const deltaTime = currentTime - lastTime;
+            
+            if (deltaTime >= targetInterval) {
+                try {
+                    this.tick();
+                    lastTime = currentTime - (deltaTime % targetInterval);
+                } catch (error) {
+                    Performance.handleError('gameLoop', error);
+                }
+            }
+            
+            this.intervalId = requestAnimationFrame(loop);
+        };
+        
+        this.intervalId = requestAnimationFrame(loop);
     },
 
     stop() {
         if (this.intervalId) {
-            clearInterval(this.intervalId);
+            if (typeof this.intervalId === 'number' && this.intervalId > 1000) {
+                // Standard interval
+                clearInterval(this.intervalId);
+            } else {
+                // Animation frame
+                cancelAnimationFrame(this.intervalId);
+            }
             this.intervalId = null;
             console.log('⏸️ Game loop stopped');
         }
@@ -797,7 +846,7 @@ const ManualActions = {
         GameState.statistics.totalClicks++;
         GameState.statistics.totalCoinsEarned += amount;
 
-        console.log(`🪙 Collected ${amount} coins! Total: ${GameState.resources.coins}`);
+        console.log(`💰 Collected ${amount} coins! Total: ${GameState.resources.coins}`);
 
         // Check for click achievements
         this.checkClickAchievements();
@@ -1158,11 +1207,35 @@ window.GameDebug = {
     }
 };
 
-// Initialize game when DOM is loaded
+// Initialize game when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        Game.init();
+        setTimeout(() => {
+            console.log('🎮 Starting IdleCity...');
+            
+            // Load saved game if available
+            if (typeof Storage !== 'undefined') {
+                Storage.loadGame();
+            }
+            
+            // Start game loop
+            GameLoop.start();
+            
+            console.log('✅ IdleCity started successfully');
+        }, 200);
     });
 } else {
-    Game.init();
+    setTimeout(() => {
+        console.log('🎮 Starting IdleCity...');
+        
+        // Load saved game if available
+        if (typeof Storage !== 'undefined') {
+            Storage.loadGame();
+        }
+        
+        // Start game loop
+        GameLoop.start();
+        
+        console.log('✅ IdleCity started successfully');
+    }, 200);
 }

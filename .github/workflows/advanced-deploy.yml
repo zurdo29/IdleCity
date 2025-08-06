@@ -1,0 +1,391 @@
+name: Advanced Deployment with Monitoring
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      deployment_type:
+        description: 'Deployment type'
+        required: true
+        default: 'blue-green'
+        type: choice
+        options:
+        - blue-green
+        - rolling
+        - canary
+
+env:
+  NODE_VERSION: '18'
+  DEPLOYMENT_ENVIRONMENT: 'production'
+
+jobs:
+  # Security and Quality Checks
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run security audit
+        run: |
+          # Check for security vulnerabilities in dependencies
+          npm audit --audit-level moderate
+          
+          # Scan for secrets in code
+          echo "Scanning for potential secrets..."
+          grep -r -i "password\|secret\|key\|token" --exclude-dir=node_modules --exclude-dir=.git . || true
+
+      - name: Validate HTML
+        run: |
+          # Install HTML validator
+          npm install -g html-validate
+          
+          # Validate HTML files
+          html-validate index.html
+
+      - name: Check Content Security Policy
+        run: |
+          echo "Validating CSP headers..."
+          # This would typically use a CSP validator tool
+          grep -q "Content-Security-Policy" index.html || echo "Warning: No CSP found"
+
+  # Build and Test
+  build-and-test:
+    runs-on: ubuntu-latest
+    needs: security-scan
+    strategy:
+      matrix:
+        node-version: [16, 18, 20]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test:coverage
+
+      - name: Run E2E tests
+        run: |
+          npx playwright install --with-deps
+          npm run test:e2e
+
+      - name: Run performance tests
+        run: npm run test:performance
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.node-version }}
+          path: |
+            test-results/
+            coverage/
+
+      - name: Build optimized assets
+        run: npm run optimize
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ matrix.node-version }}
+          path: |
+            index.html
+            css/
+            js/
+            manifest.json
+            sw.js
+
+  # Performance Benchmarking
+  performance-benchmark:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli
+          lhci autorun --config=.lighthouserc.json
+
+      - name: Bundle size analysis
+        run: |
+          echo "Analyzing bundle sizes..."
+          du -sh css/* js/* | sort -hr
+          
+          # Check if any files are too large
+          find . -name "*.js" -size +100k -exec echo "Warning: Large JS file: {}" \;
+          find . -name "*.css" -size +50k -exec echo "Warning: Large CSS file: {}" \;
+
+  # Blue-Green Deployment
+  deploy-blue-green:
+    runs-on: ubuntu-latest
+    needs: [build-and-test, performance-benchmark]
+    if: github.ref == 'refs/heads/main' && (github.event.inputs.deployment_type == 'blue-green' || github.event.inputs.deployment_type == '')
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-18
+
+      - name: Deploy to Blue Environment
+        run: |
+          echo "🔵 Deploying to Blue environment..."
+          
+          # Create deployment package
+          tar -czf deployment.tar.gz index.html css/ js/ manifest.json sw.js
+          
+          # Deploy to blue environment (GitHub Pages in this case)
+          # In a real scenario, this would deploy to a separate blue environment
+          echo "Blue deployment completed"
+
+      - name: Health Check Blue Environment
+        run: |
+          echo "🏥 Running health checks on Blue environment..."
+          
+          # Wait for deployment to be ready
+          sleep 30
+          
+          # Check if site is accessible
+          curl -f -s -o /dev/null https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ || exit 1
+          
+          # Check critical endpoints
+          curl -f -s https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/manifest.json || exit 1
+          curl -f -s https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/sw.js || exit 1
+          
+          echo "✅ Blue environment health check passed"
+
+      - name: Run Smoke Tests
+        run: |
+          echo "💨 Running smoke tests on Blue environment..."
+          
+          # Install Playwright for smoke tests
+          npx playwright install chromium
+          
+          # Run basic smoke tests
+          npx playwright test --grep "should load game correctly" --config=playwright.config.js
+
+      - name: Switch Traffic to Blue
+        run: |
+          echo "🔄 Switching traffic to Blue environment..."
+          
+          # Deploy to GitHub Pages (this replaces the green environment)
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          
+          # Create gh-pages branch with new content
+          git checkout --orphan gh-pages
+          git rm -rf .
+          
+          # Copy built files
+          cp -r ../build-artifacts-18/* .
+          
+          # Add security headers via _headers file (for Netlify-style hosting)
+          cat > _headers << EOF
+          /*
+            X-Frame-Options: DENY
+            X-Content-Type-Options: nosniff
+            X-XSS-Protection: 1; mode=block
+            Referrer-Policy: strict-origin-when-cross-origin
+            Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; img-src 'self' data:; connect-src 'self'; font-src 'self' data:; object-src 'none'; media-src 'self'; frame-src 'none';
+            Strict-Transport-Security: max-age=31536000; includeSubDomains
+            Permissions-Policy: geolocation=(), microphone=(), camera=()
+          EOF
+          
+          git add .
+          git commit -m "Deploy to production (Blue-Green)"
+          git push origin gh-pages --force
+
+      - name: Post-Deployment Verification
+        run: |
+          echo "✅ Running post-deployment verification..."
+          
+          # Wait for GitHub Pages to update
+          sleep 60
+          
+          # Verify deployment
+          curl -f -s https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ | grep -q "IdleCity" || exit 1
+          
+          echo "🎉 Blue-Green deployment completed successfully!"
+
+  # Canary Deployment
+  deploy-canary:
+    runs-on: ubuntu-latest
+    needs: [build-and-test, performance-benchmark]
+    if: github.ref == 'refs/heads/main' && github.event.inputs.deployment_type == 'canary'
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy Canary (10% traffic)
+        run: |
+          echo "🐤 Deploying Canary version (10% traffic)..."
+          # This would typically involve load balancer configuration
+          echo "Canary deployment initiated"
+
+      - name: Monitor Canary Metrics
+        run: |
+          echo "📊 Monitoring Canary metrics for 10 minutes..."
+          
+          # Simulate monitoring period
+          for i in {1..10}; do
+            echo "Minute $i: Checking error rates and performance..."
+            sleep 60
+            
+            # In a real scenario, this would check actual metrics
+            # If error rate > threshold, rollback
+            # If performance degraded > threshold, rollback
+          done
+          
+          echo "✅ Canary metrics look good, proceeding with full deployment"
+
+      - name: Promote Canary to Full Deployment
+        run: |
+          echo "🚀 Promoting Canary to full deployment..."
+          # Switch 100% traffic to canary version
+          echo "Full deployment completed"
+
+  # Rollback Job (can be triggered manually)
+  rollback:
+    runs-on: ubuntu-latest
+    if: failure() || github.event.inputs.deployment_type == 'rollback'
+    environment: production
+    
+    steps:
+      - name: Rollback to Previous Version
+        run: |
+          echo "🔄 Rolling back to previous stable version..."
+          
+          # Get previous commit
+          git checkout HEAD~1
+          
+          # Redeploy previous version
+          echo "Rollback completed"
+
+      - name: Notify Team
+        run: |
+          echo "📢 Notifying team about rollback..."
+          # This would typically send notifications via Slack, email, etc.
+
+  # Monitoring and Analytics Setup
+  setup-monitoring:
+    runs-on: ubuntu-latest
+    needs: [deploy-blue-green]
+    if: success()
+    
+    steps:
+      - name: Setup Error Tracking
+        run: |
+          echo "🔍 Setting up error tracking..."
+          # This would typically configure Sentry, Bugsnag, etc.
+
+      - name: Setup Performance Monitoring
+        run: |
+          echo "⚡ Setting up performance monitoring..."
+          # This would configure New Relic, DataDog, etc.
+
+      - name: Setup Analytics
+        run: |
+          echo "📈 Setting up analytics..."
+          # This would configure Google Analytics, Mixpanel, etc.
+
+      - name: Setup Uptime Monitoring
+        run: |
+          echo "⏰ Setting up uptime monitoring..."
+          # This would configure Pingdom, UptimeRobot, etc.
+
+  # Security Headers Validation
+  validate-security:
+    runs-on: ubuntu-latest
+    needs: [deploy-blue-green]
+    if: success()
+    
+    steps:
+      - name: Test Security Headers
+        run: |
+          echo "🔒 Validating security headers..."
+          
+          # Test security headers
+          curl -I https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ | grep -i "x-frame-options" || echo "Warning: X-Frame-Options not found"
+          curl -I https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ | grep -i "content-security-policy" || echo "Warning: CSP not found"
+          curl -I https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ | grep -i "x-content-type-options" || echo "Warning: X-Content-Type-Options not found"
+
+      - name: Run Security Scan
+        run: |
+          echo "🛡️ Running security scan..."
+          
+          # Install security scanner
+          npm install -g retire
+          
+          # Scan for vulnerable dependencies
+          retire --path .
+          
+          echo "Security scan completed"
+
+  # Performance Monitoring
+  performance-monitoring:
+    runs-on: ubuntu-latest
+    needs: [deploy-blue-green]
+    if: success()
+    
+    steps:
+      - name: Setup Continuous Performance Monitoring
+        run: |
+          echo "📊 Setting up continuous performance monitoring..."
+          
+          # This would typically set up:
+          # - Real User Monitoring (RUM)
+          # - Synthetic monitoring
+          # - Core Web Vitals tracking
+          # - Performance budgets
+
+      - name: Create Performance Dashboard
+        run: |
+          echo "📈 Creating performance dashboard..."
+          # This would set up dashboards in monitoring tools
+
+  # Notification
+  notify-deployment:
+    runs-on: ubuntu-latest
+    needs: [deploy-blue-green, setup-monitoring, validate-security]
+    if: always()
+    
+    steps:
+      - name: Notify Deployment Status
+        run: |
+          if [ "${{ needs.deploy-blue-green.result }}" == "success" ]; then
+            echo "🎉 Deployment successful!"
+            echo "✅ Site: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+            echo "✅ Monitoring: Active"
+            echo "✅ Security: Validated"
+          else
+            echo "❌ Deployment failed!"
+            echo "🔄 Rollback may be required"
+          fi

@@ -12,6 +12,21 @@
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏙️</text></svg>" type="image/svg+xml">
     
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%233b82f6'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white'>🏙️</text></svg>">
+    
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="IdleCity">
+    
+    <!-- Windows PWA Support -->
+    <meta name="msapplication-TileColor" content="#3b82f6">
+    <meta name="msapplication-config" content="browserconfig.xml">
+    
     <!-- Tailwind CSS CDN (Development) -->
     <!-- Note: For production, consider using Tailwind CLI or PostCSS plugin -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -38,6 +53,11 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen font-sans">
+    <!-- Skip Navigation Link -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-game-primary text-white px-4 py-2 rounded-lg z-50">
+        Skip to main content
+    </a>
+    
     <!-- Game Header -->
     <header class="bg-white shadow-lg border-b-4 border-game-primary" role="banner">
         <div class="container mx-auto px-4 py-6">
@@ -57,6 +77,9 @@
                     <button id="loadBtn" class="bg-game-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2" aria-label="Load saved game progress">
                         📁 Load Game
                     </button>
+                    <button id="enableNotificationsBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2" aria-label="Enable push notifications for idle game updates" style="display: none;">
+                        🔔 Enable Notifications
+                    </button>
                     <button id="resetBtn" class="bg-game-danger hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2" aria-label="Reset game to beginning (requires confirmation)">
                         🔄 Reset
                     </button>
@@ -66,7 +89,7 @@
     </header>
 
     <!-- Main Game Container -->
-    <main class="container mx-auto px-4 py-8">
+    <main id="main-content" class="container mx-auto px-4 py-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             <!-- Resources Panel -->
@@ -79,18 +102,18 @@
                     <!-- Resource Counters -->
                     <div class="space-y-4">
                         <!-- Coins -->
-                        <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg border-2 border-yellow-200">
+                        <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg border-2 border-yellow-200" role="region" aria-labelledby="coins-heading">
                             <div class="flex justify-between items-center">
                                 <div class="flex items-center gap-3">
-                                    <span class="text-2xl">🪙</span>
+                                    <span class="text-2xl coin-icon" aria-hidden="true">💰</span>
                                     <div>
-                                        <h3 class="font-semibold text-game-dark">Coins</h3>
+                                        <h3 id="coins-heading" class="font-semibold text-game-dark">Coins</h3>
                                         <p class="text-sm text-gray-600">Primary currency</p>
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <div id="coinsCount" class="text-2xl font-bold text-game-accent resource-counter">0</div>
-                                    <div class="text-sm text-gray-600">
+                                    <div id="coinsCount" class="text-2xl font-bold text-game-accent resource-counter" aria-label="Current coins amount">0</div>
+                                    <div class="text-sm text-gray-600" aria-label="Coins generation rate">
                                         +<span id="coinsPerSecond">0</span>/sec
                                     </div>
                                 </div>
@@ -167,10 +190,10 @@
                     <!-- Manual Actions -->
                     <div class="mt-6 space-y-3">
                         <h3 class="font-semibold text-game-dark mb-3">Manual Actions</h3>
-                        <button id="clickCoinsBtn" class="btn-enhanced w-full bg-game-accent hover:bg-yellow-600 text-white py-3 px-4 rounded-lg font-semibold" title="Keyboard shortcut: SPACE or C">
-                            🪙 Collect Coins (+1)
+                        <button id="clickCoinsBtn" class="btn-enhanced w-full bg-game-accent hover:bg-yellow-600 text-white py-3 px-4 rounded-lg font-semibold" title="Keyboard shortcut: SPACE or C" aria-label="Collect coins manually, adds 1 coin to your total">
+                            <span class="coin-icon">💰</span> Collect Coins (+1)
                         </button>
-                        <button id="clickPopulationBtn" class="btn-enhanced w-full bg-game-secondary hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold" title="Keyboard shortcut: P">
+                        <button id="clickPopulationBtn" class="btn-enhanced w-full bg-game-secondary hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold" title="Keyboard shortcut: P" aria-label="Attract citizens manually, adds 1 population to your city">
                             👥 Attract Citizens (+1)
                         </button>
                     </div>
@@ -423,13 +446,31 @@
     <!-- Notification Container -->
     <div id="notificationContainer" class="notification-container"></div>
     
+    <!-- Performance Indicator -->
+    <div id="performanceIndicator" class="performance-indicator">
+        <div>FPS: <span id="fpsCounter">60</span></div>
+        <div>Score: <span id="perfScore">100</span></div>
+    </div>
+    
+    <!-- Memory Cleanup Indicator -->
+    <div id="cleanupIndicator" class="cleanup-indicator">
+        Memory Cleanup
+    </div>
+    
     <!-- Game Scripts -->
+    <script src="js/performance.js"></script>
     <script src="js/game.js"></script>
-    <script src="js/ui.js"></script>
     <script src="js/storage.js"></script>
+    <script src="js/ui.js"></script>
     <script src="js/achievements.js"></script>
     <script src="js/statistics.js"></script>
     <script src="js/testing.js"></script>
+    
+    <!-- PWA Features -->
+    <script src="js/pwa.js"></script>
+    
+    <!-- Analytics and Monitoring -->
+    <script src="js/analytics.js"></script>
     
 </body>
 </html>

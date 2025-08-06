@@ -1,0 +1,72 @@
+# Security Headers for IdleCity
+# This file configures security headers for Netlify/Vercel deployment
+# For GitHub Pages, these would need to be configured differently
+
+/*
+  # Content Security Policy
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self';
+  
+  # Prevent clickjacking
+  X-Frame-Options: DENY
+  
+  # Prevent MIME type sniffing
+  X-Content-Type-Options: nosniff
+  
+  # Enable XSS protection
+  X-XSS-Protection: 1; mode=block
+  
+  # Referrer Policy
+  Referrer-Policy: strict-origin-when-cross-origin
+  
+  # Permissions Policy
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()
+  
+  # Strict Transport Security (HTTPS only)
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  
+  # Cache Control for static assets
+  Cache-Control: public, max-age=31536000, immutable
+
+# Specific headers for HTML files
+/*.html
+  # Prevent caching of HTML files
+  Cache-Control: no-cache, no-store, must-revalidate
+  
+  # Additional security for HTML
+  X-Permitted-Cross-Domain-Policies: none
+
+# Service Worker specific headers
+/sw.js
+  # Service Worker should not be cached
+  Cache-Control: no-cache, no-store, must-revalidate
+  
+  # Service Worker MIME type
+  Content-Type: application/javascript
+
+# Manifest file headers
+/manifest.json
+  # Cache manifest for 1 day
+  Cache-Control: public, max-age=86400
+  
+  # Correct MIME type for manifest
+  Content-Type: application/manifest+json
+
+# Static assets (CSS, JS, images)
+/css/*
+  Cache-Control: public, max-age=31536000, immutable
+  
+/js/*
+  Cache-Control: public, max-age=31536000, immutable
+  
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# API endpoints (if any)
+/api/*
+  # No caching for API responses
+  Cache-Control: no-cache, no-store, must-revalidate
+  
+  # CORS headers for API
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+  Access-Control-Allow-Headers: Content-Type, Authorization

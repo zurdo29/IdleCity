@@ -1,0 +1,176 @@
+{
+  "version": 1754439198502,
+  "cdnUrl": "",
+  "assets": {
+    ".lighthouserc.json": {
+      "original": ".lighthouserc.json",
+      "optimized": ".lighthouserc.json",
+      "hash": "2ea6fc57",
+      "originalSize": 664,
+      "optimizedSize": 487,
+      "compressedSize": 0,
+      "compressionRatio": 1
+    },
+    ".vscode/settings.json": {
+      "original": ".vscode/settings.json",
+      "optimized": ".vscode/settings.json",
+      "hash": "73792b9a",
+      "originalSize": 4,
+      "optimizedSize": 2,
+      "compressedSize": 0,
+      "compressionRatio": 1
+    },
+    "browserconfig.xml": {
+      "original": "browserconfig.xml",
+      "optimized": "browserconfig.xml",
+      "hash": "d8002b34",
+      "originalSize": 453,
+      "optimizedSize": 453,
+      "compressedSize": 453,
+      "compressionRatio": 0
+    },
+    "css/styles.3909b897.css": {
+      "original": "css/styles.css",
+      "optimized": "css/styles.3909b897.css",
+      "hash": "3909b897",
+      "originalSize": 12423,
+      "optimizedSize": 8299,
+      "compressedSize": 0,
+      "compressionRatio": 1
+    },
+    "index.html": {
+      "original": "index.html",
+      "optimized": "index.html",
+      "hash": "acfd68e6",
+      "originalSize": 28897,
+      "optimizedSize": 16840,
+      "compressedSize": 0,
+      "compressionRatio": 1
+    },
+    "js/achievements.d98f19a8.js": {
+      "original": "js/achievements.js",
+      "optimized": "js/achievements.d98f19a8.js",
+      "hash": "d98f19a8",
+      "originalSize": 15909,
+      "optimizedSize": 9938,
+      "compressedSize": 0,
+      "compressionRatio": 1
+    },
+    "js/analytics.d1d82ecc.js": {
+      "original": "js/analytics.js",
+      "optimized": "js/analytics.d1d82ecc.js",
+      "hash": "d1d82ecc",
+      "originalSize": 14963,
+      "optimizedSize": 8596,
+      "compressedSize": 0,
+      "compressionRatio": 1
+    },
+    "js/game.355ecfae.js": {
+      "original": "js/game.js",
+      "optimized": "js/game.355ecfae.js",
+      "hash": "355ecfae",
+      "originalSize": 43549,
+      "optimizedSize": 26507,
+      "compressedSize": 0,
+      "compressionRatio": 1
+    },
+    "js/performance.8926870d.js": {
+      "original": "js/performance.js",
+      "optimized": "js/performance.8926870d.js",
+      "hash": "8926870d",
+      "originalSize": 22861,
+      "optimizedSize": 13151,
+      "compressedSize": 0,
+      "compressionRatio": 1
+    },
+    "js/pwa.ca95940a.js": {
+      "original": "js/pwa.js",
+      "optimized": "js/pwa.ca95940a.js",
+      "hash": "ca95940a",
+      "originalSize": 22388,
+      "optimizedSize": 12380,
+      "compressedSize": 0,
+      "compressionRatio": 1
+    },
+    "js/statistics.73ffff4b.js": {
+      "original": "js/statistics.js",
+      "optimized": "js/statistics.73ffff4b.js",
+      "hash": "73ffff4b",
+      "originalSize": 13610,
+      "optimizedSize": 8616,
+      "compressedSize": 0,
+      "compressionRatio": 1
+    },
+    "js/storage.b2cc5e60.js": {
+      "original": "js/storage.js",
+      "optimized": "js/storage.b2cc5e60.js",
+      "hash": "b2cc5e60",
+      "originalSize": 14875,
+      "optimizedSize": 9519,
+      "compressedSize": 0,
+      "compressionRatio": 1
+    },
+    "js/testing.d7d2b9e4.js": {
+      "original": "js/testing.js",
+      "optimized": "js/testing.d7d2b9e4.js",
+      "hash": "d7d2b9e4",
+      "originalSize": 19815,
+      "optimizedSize": 12194,
+      "compressedSize": 0,
+      "compressionRatio": 1
+    },
+    "js/ui.b667d7b7.js": {
+      "original": "js/ui.js",
+      "optimized": "js/ui.b667d7b7.js",
+      "hash": "b667d7b7",
+      "originalSize": 76711,
+      "optimizedSize": 49453,
+      "compressedSize": 0,
+      "compressionRatio": 1
+    },
+    "manifest.json": {
+      "original": "manifest.json",
+      "optimized": "manifest.json",
+      "hash": "a0150344",
+      "originalSize": 3024,
+      "optimizedSize": 2479,
+      "compressedSize": 0,
+      "compressionRatio": 1
+    },
+    "playwright.config.8fd7ff8b.js": {
+      "original": "playwright.config.js",
+      "optimized": "playwright.config.8fd7ff8b.js",
+      "hash": "8fd7ff8b",
+      "originalSize": 2227,
+      "optimizedSize": 1016,
+      "compressedSize": 0,
+      "compressionRatio": 1
+    },
+    "sw.e8c1973b.js": {
+      "original": "sw.js",
+      "optimized": "sw.e8c1973b.js",
+      "hash": "e8c1973b",
+      "originalSize": 15462,
+      "optimizedSize": 9987,
+      "compressedSize": 0,
+      "compressionRatio": 1
+    },
+    "_headers": {
+      "original": "_headers",
+      "optimized": "_headers",
+      "hash": "7cf722e9",
+      "originalSize": 2383,
+      "optimizedSize": 2383,
+      "compressedSize": 2383,
+      "compressionRatio": 0
+    }
+  },
+  "preload": [
+    {
+      "href": "/manifest.json",
+      "as": "fetch",
+      "type": "application/json"
+    }
+  ],
+  "generated": "2025-08-06T00:13:18.502Z"
+}
