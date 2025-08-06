@@ -503,6 +503,12 @@ const GameLoop = {
                         case 'research':
                             if (GameState.resources.happiness >= 50) { // Research requires happy population
                                 GameState.resources.research += baseGeneration;
+                                
+                                // Track total research earned
+                                if (!GameState.statistics.totalResearchEarned) {
+                                    GameState.statistics.totalResearchEarned = 0;
+                                }
+                                GameState.statistics.totalResearchEarned += baseGeneration;
                             }
                             break;
                     }
@@ -1197,13 +1203,78 @@ window.GameDebug = {
             console.log('Total achievements:', Object.keys(Achievements.definitions).length);
             console.log('Unlocked achievements:', Achievements.unlockedAchievements.size);
             
+            // Test specific achievements
+            console.log('\n🧪 Testing Achievement Conditions:');
+            Object.values(Achievements.definitions).forEach(achievement => {
+                const conditionMet = achievement.condition();
+                const status = achievement.unlocked ? '✅ UNLOCKED' : (conditionMet ? '🔓 READY' : '🔒 LOCKED');
+                console.log(`${status} ${achievement.name}: ${conditionMet}`);
+                
+                if (achievement.id === 'utopia' || achievement.id === 'happyCity') {
+                    console.log(`  - Happiness: ${GameState.resources.happiness} (floor: ${Math.floor(GameState.resources.happiness)})`);
+                    console.log(`  - Population: ${GameState.resources.population}`);
+                }
+            });
+            
             if (typeof UI !== 'undefined') {
-                console.log('Switching to achievements tab...');
+                console.log('\nSwitching to achievements tab...');
                 UI.switchTab('achievements');
             }
         } else {
             console.log('Achievements system not loaded');
         }
+    },
+    forceUnlockAchievement: (achievementId) => {
+        if (typeof Achievements !== 'undefined') {
+            if (Achievements.definitions[achievementId]) {
+                Achievements.unlockAchievement(achievementId);
+                console.log(`🏆 Force unlocked: ${achievementId}`);
+            } else {
+                console.log(`❌ Achievement not found: ${achievementId}`);
+            }
+        }
+    },
+    checkResearchGeneration: () => {
+        console.log('=== Research Generation Debug ===');
+        console.log(`Current research: ${GameState.resources.research}`);
+        console.log(`Total research earned: ${GameState.statistics.totalResearchEarned || 0}`);
+        console.log(`Current happiness: ${GameState.resources.happiness}`);
+        console.log(`Research requirement met: ${GameState.resources.happiness >= 50}`);
+        
+        Object.keys(BuildingConfig).forEach(buildingType => {
+            const config = BuildingConfig[buildingType];
+            const count = GameState.buildings[buildingType];
+            
+            if (config.resourceType === 'research' && count > 0) {
+                const categoryMultiplier = GameLoop.getCategoryMultiplier(config.category);
+                const production = count * config.baseProduction * GameState.upgrades.efficiency * categoryMultiplier;
+                console.log(`${config.name} (${count}): ${production} research/sec`);
+            }
+        });
+        
+        if (typeof UI !== 'undefined') {
+            const uiCalculation = UI.calculateResearchPerSecond();
+            console.log(`UI calculation: ${uiCalculation} research/sec`);
+        }
+    },
+    fixResearchStats: () => {
+        // Fix research statistics for existing save games
+        if (!GameState.statistics.totalResearchEarned) {
+            GameState.statistics.totalResearchEarned = 0;
+        }
+        
+        // If player has research but no totalResearchEarned, estimate it
+        if (GameState.resources.research > 0 && GameState.statistics.totalResearchEarned === 0) {
+            GameState.statistics.totalResearchEarned = GameState.resources.research;
+            console.log(`🔧 Fixed research stats: Set totalResearchEarned to ${GameState.resources.research}`);
+        }
+        
+        // Force check achievements
+        if (typeof Achievements !== 'undefined') {
+            Achievements.checkAchievements();
+        }
+        
+        console.log(`✅ Research stats fixed. Total earned: ${GameState.statistics.totalResearchEarned}`);
     }
 };
 

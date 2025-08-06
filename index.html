@@ -59,7 +59,7 @@
     </a>
     
     <!-- Game Header -->
-    <header class="bg-white shadow-lg border-b-4 border-game-primary" role="banner">
+    <header class="bg-white shadow-lg border-b-4 border-game-primary">
         <div class="container mx-auto px-4 py-6">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="text-center md:text-left mb-4 md:mb-0">
@@ -70,17 +70,14 @@
                 </div>
                 
                 <!-- Game Controls -->
-                <nav class="flex flex-wrap gap-2" role="navigation" aria-label="Game controls">
-                    <button id="saveBtn" class="bg-game-secondary hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2" aria-label="Save current game progress">
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" id="saveBtn" class="bg-game-secondary hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2" title="Save current game progress">
                         💾 Save Game
                     </button>
-                    <button id="loadBtn" class="bg-game-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2" aria-label="Load saved game progress">
+                    <button type="button" id="loadBtn" class="bg-game-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2" title="Load saved game progress">
                         📁 Load Game
                     </button>
-                    <button id="enableNotificationsBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2" aria-label="Enable push notifications for idle game updates" style="display: none;">
-                        🔔 Enable Notifications
-                    </button>
-                    <button id="resetBtn" class="bg-game-danger hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2" aria-label="Reset game to beginning (requires confirmation)">
+                    <button type="button" id="resetBtn" class="bg-game-danger hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2" title="Reset game to beginning (requires confirmation)">
                         🔄 Reset
                     </button>
                 </nav>
@@ -102,7 +99,7 @@
                     <!-- Resource Counters -->
                     <div class="space-y-4">
                         <!-- Coins -->
-                        <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg border-2 border-yellow-200" role="region" aria-labelledby="coins-heading">
+                        <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg border-2 border-yellow-200">
                             <div class="flex justify-between items-center">
                                 <div class="flex items-center gap-3">
                                     <span class="text-2xl coin-icon" aria-hidden="true">💰</span>
@@ -112,8 +109,8 @@
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <div id="coinsCount" class="text-2xl font-bold text-game-accent resource-counter" aria-label="Current coins amount">0</div>
-                                    <div class="text-sm text-gray-600" aria-label="Coins generation rate">
+                                    <div id="coinsCount" class="text-2xl font-bold text-game-accent resource-counter">0</div>
+                                    <div class="text-sm text-gray-600">
                                         +<span id="coinsPerSecond">0</span>/sec
                                     </div>
                                 </div>
@@ -138,7 +135,7 @@
                                 </div>
                             </div>
                             <div class="progress-bar">
-                                <div id="populationProgress" class="progress-bar-fill" style="width: 0%"></div>
+                                <div id="populationProgress" class="progress-bar-fill w-0"></div>
                             </div>
                             <div class="text-xs text-gray-500 mt-1">
                                 <span id="populationCapacity">0 / 10,000</span>
@@ -163,7 +160,7 @@
                                 </div>
                             </div>
                             <div class="progress-bar">
-                                <div id="happinessProgress" class="progress-bar-fill" style="width: 100%"></div>
+                                <div id="happinessProgress" class="progress-bar-fill w-full"></div>
                             </div>
                         </div>
                         
@@ -190,28 +187,28 @@
                     <!-- Manual Actions -->
                     <div class="mt-6 space-y-3">
                         <h3 class="font-semibold text-game-dark mb-3">Manual Actions</h3>
-                        <button id="clickCoinsBtn" class="btn-enhanced w-full bg-game-accent hover:bg-yellow-600 text-white py-3 px-4 rounded-lg font-semibold" title="Keyboard shortcut: SPACE or C" aria-label="Collect coins manually, adds 1 coin to your total">
-                            <span class="coin-icon">💰</span> Collect Coins (+1)
+                        <button type="button" id="clickCoinsBtn" class="btn-enhanced w-full bg-game-accent hover:bg-yellow-600 text-white py-3 px-4 rounded-lg font-semibold" title="Keyboard shortcut: SPACE or C">
+                            🪙 Collect Coins (+1)
                         </button>
-                        <button id="clickPopulationBtn" class="btn-enhanced w-full bg-game-secondary hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold" title="Keyboard shortcut: P" aria-label="Attract citizens manually, adds 1 population to your city">
+                        <button type="button" id="clickPopulationBtn" class="btn-enhanced w-full bg-game-secondary hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold" title="Keyboard shortcut: P">
                             👥 Attract Citizens (+1)
                         </button>
                     </div>
                 </div>
             </section>
             
-            <!-- Buildings & Upgrades Panel -->
+            <!-- Buildings &amp; Upgrades Panel -->
             <section class="lg:col-span-2">
                 <!-- Tab Navigation -->
                 <div class="bg-white rounded-t-xl shadow-lg border-2 border-b-0 border-gray-200">
                     <div class="flex">
-                        <button id="buildingsTab" class="tab-button active flex-1 py-3 px-4 text-center font-semibold border-r border-gray-200 rounded-tl-xl bg-game-primary text-white text-sm">
+                        <button type="button" id="buildingsTab" class="tab-button active flex-1 py-3 px-4 text-center font-semibold border-r border-gray-200 rounded-tl-xl bg-game-primary text-white text-sm">
                             🏗️ Buildings
                         </button>
-                        <button id="upgradesTab" class="tab-button flex-1 py-3 px-4 text-center font-semibold border-r border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm">
+                        <button type="button" id="upgradesTab" class="tab-button flex-1 py-3 px-4 text-center font-semibold border-r border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm">
                             ⚡ Upgrades
                         </button>
-                        <button id="achievementsTab" class="tab-button flex-1 py-3 px-4 text-center font-semibold rounded-tr-xl bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm">
+                        <button type="button" id="achievementsTab" class="tab-button flex-1 py-3 px-4 text-center font-semibold rounded-tr-xl bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm">
                             🏆 Progress
                         </button>
                     </div>
@@ -228,16 +225,16 @@
                     
                     <!-- Building Tier Filters -->
                     <div class="flex gap-2 mb-6 flex-wrap">
-                        <button class="tier-filter active px-4 py-2 rounded-lg bg-game-primary text-white text-sm font-medium" data-tier="all">
+                        <button type="button" class="tier-filter active px-4 py-2 rounded-lg bg-game-primary text-white text-sm font-medium" data-tier="all">
                             All Buildings
                         </button>
-                        <button class="tier-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-tier="1">
+                        <button type="button" class="tier-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-tier="1">
                             Tier 1
                         </button>
-                        <button class="tier-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-tier="2">
+                        <button type="button" class="tier-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-tier="2">
                             Tier 2
                         </button>
-                        <button class="tier-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-tier="3">
+                        <button type="button" class="tier-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-tier="3">
                             Tier 3
                         </button>
                     </div>
@@ -252,23 +249,23 @@
                 <div id="upgradesContent" class="tab-content hidden bg-white rounded-b-xl shadow-lg p-6 border-2 border-t-0 border-gray-200">
                     <div class="mb-6">
                         <h2 class="text-2xl font-bold text-game-dark mb-2 flex items-center gap-2">
-                            ⚡ Research & Upgrades
+                            ⚡ Research &amp; Upgrades
                         </h2>
                         <p class="text-gray-600">Spend research points to improve your city</p>
                     </div>
                     
                     <!-- Upgrade Categories -->
                     <div class="flex gap-2 mb-6 flex-wrap">
-                        <button class="upgrade-filter active px-4 py-2 rounded-lg bg-game-primary text-white text-sm font-medium" data-category="all">
+                        <button type="button" class="upgrade-filter active px-4 py-2 rounded-lg bg-game-primary text-white text-sm font-medium" data-category="all">
                             All Upgrades
                         </button>
-                        <button class="upgrade-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="efficiency">
+                        <button type="button" class="upgrade-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="efficiency">
                             Efficiency
                         </button>
-                        <button class="upgrade-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="special">
+                        <button type="button" class="upgrade-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="special">
                             Special
                         </button>
-                        <button class="upgrade-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="automation">
+                        <button type="button" class="upgrade-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="automation">
                             Automation
                         </button>
                     </div>
@@ -283,7 +280,7 @@
                 <div id="achievementsContent" class="tab-content hidden bg-white rounded-b-xl shadow-lg p-6 border-2 border-t-0 border-gray-200">
                     <div class="mb-6">
                         <h2 class="text-2xl font-bold text-game-dark mb-2 flex items-center gap-2">
-                            🏆 Achievements & Statistics
+                            🏆 Achievements &amp; Statistics
                         </h2>
                         <p class="text-gray-600">Track your progress and unlock rewards</p>
                     </div>
@@ -295,7 +292,7 @@
                             <span id="achievementProgress" class="text-2xl font-bold text-purple-600">0/0</span>
                         </div>
                         <div class="progress-bar mb-2">
-                            <div id="achievementProgressBar" class="progress-bar-fill" style="width: 0%; background: linear-gradient(90deg, #8b5cf6, #3b82f6);"></div>
+                            <div id="achievementProgressBar" class="progress-bar-fill achievement-progress w-0"></div>
                         </div>
                         <div class="text-sm text-gray-600">
                             <span id="achievementPercentage">0%</span> complete
@@ -304,22 +301,22 @@
                     
                     <!-- Achievement Categories -->
                     <div class="flex gap-2 mb-6 flex-wrap">
-                        <button class="achievement-filter active px-4 py-2 rounded-lg bg-game-primary text-white text-sm font-medium" data-category="all">
+                        <button type="button" class="achievement-filter active px-4 py-2 rounded-lg bg-game-primary text-white text-sm font-medium" data-category="all">
                             All Achievements
                         </button>
-                        <button class="achievement-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="clicking">
+                        <button type="button" class="achievement-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="clicking">
                             Clicking
                         </button>
-                        <button class="achievement-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="building">
+                        <button type="button" class="achievement-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="building">
                             Building
                         </button>
-                        <button class="achievement-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="population">
+                        <button type="button" class="achievement-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="population">
                             Population
                         </button>
-                        <button class="achievement-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="wealth">
+                        <button type="button" class="achievement-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="wealth">
                             Wealth
                         </button>
-                        <button class="achievement-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="special">
+                        <button type="button" class="achievement-filter px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300" data-category="special">
                             Special
                         </button>
                     </div>

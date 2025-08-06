@@ -123,6 +123,10 @@ span[aria-hidden="true"] {
     animation: progress-shimmer 2s infinite;
 }
 
+.achievement-progress {
+    background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+}
+
 @keyframes progress-shimmer {
     0% { left: -100%; }
     100% { left: 100%; }

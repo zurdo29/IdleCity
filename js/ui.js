@@ -246,6 +246,13 @@ const UI = {
         if (this.elements.researchPerSecond) {
             const researchPerSec = this.calculateResearchPerSecond();
             this.elements.researchPerSecond.textContent = this.formatNumber(researchPerSec, 1);
+            
+            // Debug: Log research calculation
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                if (researchPerSec > 0) {
+                    console.log(`🔬 Research/sec: ${researchPerSec}, Happiness: ${GameState.resources.happiness}`);
+                }
+            }
         }
     },
 

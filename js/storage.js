@@ -212,6 +212,14 @@ const Storage = {
             GameState.statistics.totalClicks = Math.max(0, loadedState.statistics.totalClicks || 0);
             GameState.statistics.buildingsPurchased = Math.max(0, loadedState.statistics.buildingsPurchased || 0);
             GameState.statistics.totalCoinsEarned = Math.max(0, loadedState.statistics.totalCoinsEarned || 0);
+            
+            // Initialize missing statistics for existing save games
+            GameState.statistics.totalResearchEarned = Math.max(0, loadedState.statistics.totalResearchEarned || 0);
+            GameState.statistics.maxPopulation = Math.max(0, loadedState.statistics.maxPopulation || Math.floor(GameState.resources.population));
+            GameState.statistics.maxHappiness = Math.max(0, loadedState.statistics.maxHappiness || 100);
+            GameState.statistics.totalUpgradesPurchased = Math.max(0, loadedState.statistics.totalUpgradesPurchased || 0);
+            GameState.statistics.sessionsPlayed = Math.max(1, loadedState.statistics.sessionsPlayed || 1);
+            GameState.statistics.achievementsUnlocked = Math.max(0, loadedState.statistics.achievementsUnlocked || 0);
 
             // Handle game time - calculate offline progress
             const savedTime = loadedState.statistics.gameTime || 0;

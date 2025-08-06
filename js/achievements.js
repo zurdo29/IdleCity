@@ -151,7 +151,7 @@ const Achievements = {
             description: 'Maintain 100% happiness with 50+ population',
             icon: '😊',
             category: 'happiness',
-            condition: () => GameState.resources.happiness >= 100 && GameState.resources.population >= 50,
+            condition: () => Math.floor(GameState.resources.happiness) >= 100 && GameState.resources.population >= 50,
             reward: { coins: 1000, research: 10 },
             unlocked: false,
             progress: 0
@@ -162,7 +162,7 @@ const Achievements = {
             description: 'Maintain 100% happiness with 500+ population',
             icon: '🌈',
             category: 'happiness',
-            condition: () => GameState.resources.happiness >= 100 && GameState.resources.population >= 500,
+            condition: () => Math.floor(GameState.resources.happiness) >= 100 && GameState.resources.population >= 500,
             reward: { coins: 10000, research: 50, happiness: 25 },
             unlocked: false,
             progress: 0
@@ -224,9 +224,14 @@ const Achievements = {
             icon: '⚙️',
             category: 'special',
             condition: () => {
-                const upgradeCount = Object.values(GameState.upgrades).filter(level => 
-                    typeof level === 'number' && level > 0
-                ).length;
+                // Count upgrades that have been purchased (excluding base efficiency which starts at 1)
+                let upgradeCount = 0;
+                Object.keys(GameState.upgrades).forEach(upgradeType => {
+                    const level = GameState.upgrades[upgradeType];
+                    if (typeof level === 'number' && upgradeType !== 'efficiency' && upgradeType !== 'populationCap' && level > 0) {
+                        upgradeCount++;
+                    }
+                });
                 return upgradeCount >= 5;
             },
             reward: { coins: 2500, research: 15, happiness: 10 },
@@ -286,6 +291,11 @@ const Achievements = {
             } else if (!achievement.unlocked) {
                 // Update progress for display
                 this.updateProgress(achievement);
+                
+                // Debug: Log achievement progress for utopia
+                if (achievement.id === 'utopia' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+                    console.log(`🌈 Utopia progress: Happiness=${GameState.resources.happiness}, Population=${GameState.resources.population}, Condition=${achievement.condition()}`);
+                }
             }
         });
         
@@ -365,6 +375,13 @@ const Achievements = {
         } else if (achievement.condition.toString().includes('totalCoinsEarned')) {
             const target = parseInt(achievement.condition.toString().match(/\d+/)[0]);
             achievement.progress = Math.min(100, (GameState.statistics.totalCoinsEarned / target) * 100);
+        } else if (achievement.condition.toString().includes('totalResearchEarned')) {
+            const target = parseInt(achievement.condition.toString().match(/\d+/)[0]);
+            const current = GameState.statistics.totalResearchEarned || 0;
+            achievement.progress = Math.min(100, (current / target) * 100);
+        } else if (achievement.condition.toString().includes('gameTime')) {
+            const target = parseInt(achievement.condition.toString().match(/\d+/)[0]);
+            achievement.progress = Math.min(100, (GameState.statistics.gameTime / target) * 100);
         }
         // Add more progress calculations as needed
     },
