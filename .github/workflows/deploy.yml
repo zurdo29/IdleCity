@@ -170,8 +170,22 @@ jobs:
       run: |
         echo "🚀 Starting asset optimization..."
         
-        # Copy source files to dist
-        cp -r . dist/
+        # Create dist directory and copy essential files
+        mkdir -p dist
+        
+        # Copy core game files
+        cp index.html dist/
+        cp -r js dist/
+        cp -r css dist/
+        cp manifest.json dist/
+        cp sw.js dist/
+        cp _headers dist/
+        
+        # Copy any additional assets if they exist
+        [ -d "assets" ] && cp -r assets dist/ || true
+        [ -d "images" ] && cp -r images dist/ || true
+        [ -f "browserconfig.xml" ] && cp browserconfig.xml dist/ || true
+        
         cd dist
         
         # Remove development files
